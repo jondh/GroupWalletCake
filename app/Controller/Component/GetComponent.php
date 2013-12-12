@@ -5,23 +5,44 @@ App::import('Model', 'Transaction');
  
 class GetComponent extends Component {
  
-    public function getOweUserWallet() {
-		$amount = $this->Transaction->find('all', array(
-			'conditions' => array(
-				'wallet_id' => 1,
-				'oweUID' => $this->Auth->user('id')
-			)
-		));
+    public function getOweUserWallet($user_id = 0, $other_user_id = 0, $wallet_id = 0) {
+    	if($user_id > 0 && $other_user_id > 0 && $wallet_id > 0){
+    		$TransactionModel = ClassRegistry::init('Transaction');
+    	
+			$amount = $TransactionModel->find('all', array(
+				'conditions' => array(
+					'wallet_id' => $wallet_id,
+					'oweUID' => $user_id,
+					'owedUID' => $other_user_id
+				)
+			));
 		
-		$totalAmount = 0; 
-		for($i = 0; $i < count($amount); $i++){
-			$totalAmount += $amount[$i]['Transaction']['amount'];
+			$totalAmount = 0; 
+			for($i = 0; $i < count($amount); $i++){
+				$totalAmount += $amount[$i]['Transaction']['amount'];
+			}
+      	  	return $totalAmount;
 		}
-        return $totalAmount;
     }
 	
-    public function getOwedUserWallet() {
-        return 'gey nbot oerf';
+    public function getOwedUserWallet($user_id = 0, $other_user_id = 0, $wallet_id = 0) {
+        if($user_id > 0 && $other_user_id > 0 && $wallet_id > 0){
+    		$TransactionModel = ClassRegistry::init('Transaction');
+    	
+			$amount = $TransactionModel->find('all', array(
+				'conditions' => array(
+					'wallet_id' => $wallet_id,
+					'oweUID' => $other_user_id,
+					'owedUID' => $user_id
+				)
+			));
+		
+			$totalAmount = 0; 
+			for($i = 0; $i < count($amount); $i++){
+				$totalAmount += $amount[$i]['Transaction']['amount'];
+			}
+      	  	return $totalAmount;
+		}
     }
 	
     public function getOweUser() {

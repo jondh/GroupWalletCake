@@ -31,28 +31,26 @@
 			 }
 		}
 	
-		public function getOwe($wallet_id, $command){
+		public function getTotalUserWallet($wallet_id, $other_user_id){
+		
+			$this->set('authUserID', $this->Auth->user('id'));
+		
 			if($wallet_id){
 				$amount = $this->Transaction->find('all', array(
 					'conditions' => array(
 						'wallet_id' => $wallet_id,
-						'oweUID' => $this->Auth->user('id')
+						'OR' => array(
+							'oweUID' => $this->Auth->user('id'),
+							'owedUID' => $this->Auth->user('id')
+						),
+						'OR' => array(
+							'owedUID' => $other_user_id,
+							'oweUID' => $other_user_id
+						),
 					)
 				));
-				
-				if($command == 'display'){
-					$this->set('transaction', $amount);
-				}
-				
-				$totalAmount = 0; 
-				for($i = 0; $i < count($amount); $i++){
-					$totalAmount += $amount[$i]['Transaction']['amount'];
-				}
-				echo $totalAmount;
-				
-				if($command == 'calculate'){
-					return $totalAmount
-				}
+
+				$this->set('transaction', $amount);
 				
 			}
 		}
