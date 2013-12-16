@@ -31,12 +31,22 @@ $cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework
 		echo $this->Html->meta('icon');
 
 		echo $this->Html->css('cake.generic');
+		echo $this->Html->css('http://code.jquery.com/ui/1.10.1/themes/base/jquery-ui.css');
 
 		echo $this->fetch('meta');
 		echo $this->fetch('css');
 		echo $this->fetch('script');
+		
+		echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js', 
+							'http://code.jquery.com/ui/1.10.1/jquery-ui.js'));
+        echo $scripts_for_layout;
 	?>
 </head>
+
+<?php
+ if (class_exists('JsHelper') && method_exists($this->Js, 'writeBuffer')) echo $this->Js->writeBuffer();
+?>
+
 <body>
 	<div id="container">
 		<div id="header">
@@ -58,6 +68,9 @@ $cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework
 			?>
 		</div>
 	</div>
-	<?php echo $this->element('sql_dump'); ?>
+	<?php echo $this->element('sql_dump');
+	      echo $this->Js->writeBuffer();
+	?>
+	
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 	class UsersController extends AppController { 
 	
+	
 		public function beforeFilter(){
 			parent::beforeFilter();
        		$this->Auth->allow('login','add');
@@ -38,8 +39,60 @@
 			}
 		}
 		
-		public function findUser(){
-			
+		public function findUserDrop($wallet_id){
+			$this->User->recursive = -1;
+			if ( $this->request->is('ajax') ) {
+			 	$this->autoRender = false;
+    			$this->layout = 'ajax';
+	            $dup=$this->User->find('all', array(
+	            	'joins' => array(
+	            		array(
+	            			'table' => 'wallet_relations',
+	            			'alias' => 'WalletRelation',
+	            			'type'  => 'INNER',
+	            			'conditions' => array(
+								'User.id = WalletRelation.user_id'
+							)
+	            		)
+	            	),
+	            	'conditions' => array(
+	            		'WalletRelation.wallet_id' => $wallet_id
+	            	),
+	            	'feilds' => 'User.id'
+	            ));
+	            
+	            $users=$this->User->find('all', array(
+	            	'conditions' => array(
+	            		'OR' => array(
+	            			'User.username LIKE'=>'%'.$_GET['term'].'%',
+	            			'User.firstName LIKE'=>'%'.$_GET['term'].'%',
+	            			'User.lastName LIKE'=>'%'.$_GET['term'].'%',
+	            			'User.email LIKE'=>'%'.$_GET['term'].'%'
+	            		)
+	            	)
+	            ));
+	            
+	            for($i = 0; $i < count($users); $i++){
+	            	$users[$i]['User']['inWallet'] = '0';
+	            	for($j = 0; $j < count($dup); $j++){
+	            		if($users[$i]['User']['id'] == $dup[$j]['User']['id']){
+							$users[$i]['User']['inWallet'] = '1';
+							break;           			
+	            		}
+	            	}
+	            }
+	            
+	            echo json_encode($users);
+	        }
+		}
+		
+		public function findUser($wallet_id){
+			if($wallet_id){
+				$this->set('wallet_id', $wallet_id);
+			}
+			else{
+				return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
+			}
 		}
 	}
 ?>

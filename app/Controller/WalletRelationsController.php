@@ -4,6 +4,14 @@
 		public $components = array('Get');
 		
 		public function index($wallet_id){
+		
+			$this->request->data['WalletRelation']['wallet_id'] = $wallet_id;
+			$this->request->data['WalletRelation']['user_id'] = $this->Auth->user('id');
+			$this->WalletRelation->set($this->request->data);
+			if (!$this->WalletRelation->validates()){
+				$this->Session->setFlash(__('You may not have access to that wallet'));
+				return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
+			}
 			
 			$this->set('authUserID', $this->Auth->user('id'));
 			
@@ -47,9 +55,43 @@
 					$j++;
 				}
 			}
-			
+			$this->set('wallet_id', $wallet_id);
 			$this->set('wallet_relations', $othersInWallet);
 		}	
+	
+		public function addUser($wallet_id, $user_id){
+			if($user_id && $wallet_id){
+			
+				if($this->request->is('post')){
+					$this->WalletRelation->create();
+					$this->request->data['WalletRelation']['wallet_id'] = $wallet_id;
+					$this->request->data['WalletRelation']['user_id'] = $user_id;
+					$this->request->data['WalletRelation']['accept'] = '1';
+					// validate data
+					$this->WalletRelation->set($this->request->data);
+					if ($this->WalletRelation->validates()){
+						if ($this->WalletRelation->save($this->request->data)) {
+               				 $this->Session->setFlash(__('The user was added to the wallet'));
+        					 return $this->redirect(array('controller' => 'WalletRelations', 'action' => 'index', $wallet_id));
+           				}
+           				$this->Session->setFlash(__('The user could not be added. Please, try again'));
+					}
+					else{
+						$this->Session->setFlash(__('The request did not validate'));
+						return $this->redirect(array('controller' => 'WalletRelations', 'action' => 'index', $wallet_id));
+					}
+				}
+				$this->Session->setFlash(__('The request was not post'));
+				return $this->redirect(array('controller' => 'WalletRelations', 'action' => 'index', $wallet_id));
+			}
+			if($wallet_id){
+				$this->Session->setFlash(__('There is not a user id'));
+				return $this->redirect(array('controller' => 'WalletRelations', 'action' => 'index', $wallet_id));
+			}
+			$this->Session->setFlash(__('There is not a wallet id'));
+			return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
+			
+		}
 	
 	}
 ?>
