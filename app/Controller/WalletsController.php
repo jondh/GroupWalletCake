@@ -4,12 +4,28 @@
 		public $components = array('Get');
 	
 		public function index(){
+<<<<<<< HEAD
 			//$this->layout = 'wallets';
+=======
+>>>>>>> 6a466f41ac6119e55721139e1388c532a2e55e27
 			// find wallets that user created
 			$selfWallets = $this->Wallet->find('all', array(
+				'joins' => array(
+					array(
+						'table' => 'users',
+						'alias' => 'User',
+						'type' => 'INNER',
+						'conditions' => array(
+							'Wallet.user_id = User.id'
+						)
+					)
+				),
 				'conditions' => array(
 					'Wallet.user_id' => $this->Auth->user('id')
-				)
+				),
+       			'fields' => array(
+       				'Wallet.*', 'User.firstName', 'User.lastName'
+       			)
 			));
 			// find wallets that user is in
 			$wallets = $this->Wallet->find('all', array(
@@ -21,13 +37,21 @@
 						'conditions' => array(
 							'Wallet.wallet_id = WalletRelations.wallet_id'
 						)
+					),
+					array(
+						'table' => 'users',
+						'alias' => 'User',
+						'type' => 'INNER',
+						'conditions' => array(
+							'Wallet.user_id = User.id'
+						)
 					)
 				),
        			'conditions' => array(
        				'WalletRelations.user_id' => $this->Auth->user('id')
        			),
        			'fields' => array(
-       				'Wallet.*'
+       				'Wallet.*', 'User.firstName', 'User.lastName'
        			)
        		));
        		// combine the wallets
@@ -35,7 +59,7 @@
        		for($i = 0; $i < count($selfWallets); $i++){
        			$wallets[$j + $i] = $selfWallets[$i]; 
        		}
-       		
+       		// get the unique wallets (should be done already ?) and find the money owe / owed for each
        		if(count($wallets) != 0){
        			$uniqueWallets;
        			$j = 0;
@@ -62,6 +86,7 @@
 					}
 				}
 			}
+			$this->set('user', $this->Auth->user);
 			$this->set('wallets', $uniqueWallets);
 		}
 		
