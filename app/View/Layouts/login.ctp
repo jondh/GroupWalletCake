@@ -80,7 +80,6 @@ $cakeDescription = __d('cake_dev', 'Group Wallet');
             <li><a href="#contact">Contact</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-			<li><a href="http://whereone.com/GroupWalletCake/Users/logout">Logout</a></li>
             <li><a href="http://whereone.com">Whereone</a></li>
           </ul>
         </div><!--/.nav-collapse -->
