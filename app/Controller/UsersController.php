@@ -95,16 +95,24 @@
 			}
 		}
 		
-		public function showProfile($user_id){
-			if(!$user_id){
-				$this->set('user', $this->Auth->user);
+		public function showProfile($user_id = 0){
+			if($user_id == 0){
+				$user['User']['id'] = $this->Auth->user('id');
+				$user['User']['username'] = $this->Auth->user('username');
+				$user['User']['email'] = $this->Auth->user('email');
+				$user['User']['firstName'] = $this->Auth->user('firstName');
+				$user['User']['lastName'] = $this->Auth->user('lastName');
+				$this->set('user', $user);
 			}
 			else{
-				$user = $this->find('first', array(
+				$user = $this->User->find('first', array(
 					'conditions' => array(
 						'User.id' => $user_id
+					),
+					'fields' => array(
+						'User.id', 'User.username', 'User.email', 'User.firstName', 'User.lastName'
 					)
-				);
+				));
 				$this->set('user', $user);
 			}
 		}
