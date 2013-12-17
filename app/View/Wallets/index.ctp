@@ -1,6 +1,5 @@
 <?php ?>
 <h1><?php echo $this->Html->link('New Wallet', array('controller' => 'wallets', 'action' => 'add'), array('class' => 'btn btn-primary btn-lg')); ?></h1>
-<<<<<<< HEAD
 
 <?php foreach ($wallets as $wallet): ?> 
 	<div class="row">
@@ -25,7 +24,6 @@
 	<?php unset($wallet); ?>
 <?php endforeach; ?>
 
-=======
 
 <?php foreach ($wallets as $wallet): ?> 
 	<div class="row">
@@ -49,4 +47,3 @@
 	</div>  
 <?php unset($wallet); ?>
 <?php endforeach; ?>
->>>>>>> 6a466f41ac6119e55721139e1388c532a2e55e27

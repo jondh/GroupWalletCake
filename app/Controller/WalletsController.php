@@ -4,10 +4,7 @@
 		public $components = array('Get');
 	
 		public function index(){
-<<<<<<< HEAD
 			//$this->layout = 'wallets';
-=======
->>>>>>> 6a466f41ac6119e55721139e1388c532a2e55e27
 			// find wallets that user created
 			$selfWallets = $this->Wallet->find('all', array(
 				'joins' => array(
