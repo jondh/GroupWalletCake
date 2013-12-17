@@ -12,6 +12,7 @@
 		}
 	
 		public function login(){
+			$this->layout = 'login';
 			if ($this->request->is('post')) {
         		/* login and redirect to url set in app controller */
            		if ($this->Auth->login()) {
