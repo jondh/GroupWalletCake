@@ -94,5 +94,19 @@
 				return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
 			}
 		}
+		
+		public function showProfile($user_id){
+			if(!$user_id){
+				$this->set('user', $this->Auth->user);
+			}
+			else{
+				$user = $this->find('first', array(
+					'conditions' => array(
+						'User.id' => $user_id
+					)
+				);
+				$this->set('user', $user);
+			}
+		}
 	}
 ?>
