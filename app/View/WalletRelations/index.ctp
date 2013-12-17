@@ -1,4 +1,4 @@
-<?php echo $this->Html->link('Add User', array('controller' => 'users', 'action' => 'findUser', $wallet_id)); ?>
+<?php echo $this->Html->link('Add User', array('controller' => 'users', 'action' => 'findUser', $wallet_id), array('class' => 'btn btn-primary btn-lg')); ?>
 
 <table>
 	<tr>
