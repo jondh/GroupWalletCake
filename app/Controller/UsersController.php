@@ -40,6 +40,61 @@
 			}
 		}
 		
+		public function edit(){
+ 
+            if ($this->request->is('post')) {
+                $this->User->id = $this->Auth->user('id');
+                
+                if(!$this->User->exists()){
+      				$this->Session->setFlash(__('Unable to find User.'));
+   				}
+                $success = true;
+                $this->User->set($this->request->data);
+                
+                if($this->request->data['User']['firstNameEdit']){
+                	if($this->User->Validates(array('fieldList' => array('firstNameEdit')))){
+						if ($this->User->saveField('firstName', $this->request->data['User']['firstNameEdit'])) {
+							$this->Session->write('Auth.User.firstName', $this->request->data['User']['firstNameEdit']);
+							$success = true;
+						}else { $success = false; }
+					}else { $success = false; }
+                }
+                
+                if($this->request->data['User']['lastNameEdit']){
+                	if($this->User->Validates(array('fieldList' => array('lastNameEdit')))){
+						if ($this->User->saveField('lastName', $this->request->data['User']['lastNameEdit'])) {
+							$this->Session->write('Auth.User.lastName', $this->request->data['User']['lastNameEdit']);
+							$success = true;
+						}else { $success = false; }
+					}else { $success = false; }
+                }
+                
+                if($this->request->data['User']['emailEdit']){
+                	if($this->User->Validates(array('fieldList' => array('emailEdit')))){
+						if ($this->User->saveField('email', $this->request->data['User']['emailEdit'])) {
+							$this->Session->write('Auth.User.email', $this->request->data['User']['emailEdit']);
+							$success = true;
+						}else { $success = false; }
+					}else { $success = false; }
+                }
+                
+                if($this->request->data['User']['passwordEdit']){
+                	if($this->User->Validates(array('fieldList' => array('currentPassword', 'passwordEdit', 'passwordConfirmEdit')))){
+						if ($this->User->saveField('password', $this->request->data['User']['passwordEdit'])) {
+							$success = true;
+						}else { $success = false; }
+					}else { $success = false; }
+                }
+                
+                if($success){
+                    $this->Session->setFlash(__('The user has been updated'));
+                    $this->redirect(array('action' => 'showProfile'));
+                }else{
+                   // $this->Session->setFlash(__('Unable to update your user.'));
+                }
+            }
+		}
+		
 		public function findUserDrop($wallet_id){
 			$this->User->recursive = -1;
 			if ( $this->request->is('ajax') ) {

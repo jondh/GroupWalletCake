@@ -23,6 +23,38 @@ class User extends AppModel {
                 'message' => 'Username can only be letters, numbers and underscores'
             ),
         ),
+        'firstName' => array(
+            'nonEmpty' => array(
+                'rule' => array('notEmpty'),
+                'message' => 'A first name is required',
+                'allowEmpty' => false
+            ),
+            'between' => array( 
+                'rule' => array('between', 1, 15), 
+                'required' => true, 
+                'message' => 'Names must be between 1 to 15 characters'
+            ),
+            'alphaNumericDashUnderscore' => array(
+                'rule'    => array('alphaNumericDashUnderscore'),
+                'message' => 'Name can only be letters, numbers and underscores'
+            ),
+        ),
+        'lastName' => array(
+            'nonEmpty' => array(
+                'rule' => array('notEmpty'),
+                'message' => 'A last name is required',
+                'allowEmpty' => false
+            ),
+            'between' => array( 
+                'rule' => array('between', 1, 15), 
+                'required' => true, 
+                'message' => 'Names must be between 1 to 15 characters'
+            ),
+            'alphaNumericDashUnderscore' => array(
+                'rule'    => array('alphaNumericDashUnderscore'),
+                'message' => 'Name can only be letters, numbers and underscores'
+            ),
+        ),
         'password' => array(
             'required' => array(
                 'rule' => array('notEmpty'),
@@ -55,12 +87,56 @@ class User extends AppModel {
                 'message' => 'This email is already in use',
             ),
             'between' => array( 
-                'rule' => array('between', 6, 60), 
-                'message' => 'Usernames must be between 6 to 60 characters'
+                'rule' => 'email', 
+                'message' => 'Please enter proper email'
             )
         ),
-         
-        'password_update' => array(
+        
+        'firstNameEdit' => array(
+            'between' => array( 
+                'rule' => array('between', 1, 15), 
+                'message' => 'Names must be between 1 to 15 characters',
+                'allowEmpty' => true,
+                'required' => false
+            ),
+            'alphaNumericDashUnderscore' => array(
+                'rule'    => array('alphaNumericDashUnderscore'),
+                'message' => 'Name can only be letters, numbers and underscores'
+            ),
+        ),
+        'lastNameEdit' => array(
+            'between' => array( 
+                'rule' => array('between', 1, 15), 
+                'message' => 'Names must be between 1 to 15 characters',
+                'allowEmpty' => true,
+                'required' => false
+            ),
+            'alphaNumericDashUnderscore' => array(
+                'rule'    => array('alphaNumericDashUnderscore'),
+                'message' => 'Name can only be letters, numbers and underscores'
+            ),
+        ),
+        'emailEdit' => array(
+             'unique' => array(
+                'rule'    => array('isUniqueEmailEdit'),
+                'message' => 'This email is already in use',
+                'allowEmpty' => true,
+                'required' => false
+            ),
+            'between' => array( 
+                'rule' => 'email', 
+                'message' => 'Please enter proper email',
+                'allowEmpty' => true,
+                'required' => false
+            )
+        ),
+        'currentPassword' => array(
+        	'match' => array(
+        		'rule' => array('checkPassword'),
+        		'message' => 'Incorrect Password'
+        	)
+        ), 
+        'passwordEdit' => array(
             'min_length' => array(
                 'rule' => array('minLength', '6'),   
                 'message' => 'Password must have a mimimum of 6 characters',
@@ -68,9 +144,9 @@ class User extends AppModel {
                 'required' => false
             )
         ),
-        'password_confirm_update' => array(
+        'passwordConfirmEdit' => array(
              'equaltofield' => array(
-                'rule' => array('equaltofield','password_update'),
+                'rule' => array('equaltofield','passwordEdit'),
                 'message' => 'Both passwords must match.',
                 'required' => false,
             )
@@ -85,7 +161,6 @@ class User extends AppModel {
      * @return boolean
      */
     function isUniqueUsername($check) {
- 
         $username = $this->find(
             'first',
             array(
@@ -116,7 +191,6 @@ class User extends AppModel {
      * @return boolean
      */
     function isUniqueEmail($check) {
- 
         $email = $this->find(
             'first',
             array(
@@ -138,6 +212,48 @@ class User extends AppModel {
         }else{
             return true; 
         }
+    }
+    
+    function isUniqueEmailEdit($check) {
+ 		if(!$check['emailEdit']){
+ 			return true;
+ 		}
+        $email = $this->find(
+            'first',
+            array(
+                'fields' => array(
+                    'User.id'
+                ),
+                'conditions' => array(
+                    'User.email' => $check['emailEdit']
+                )
+            )
+        );
+ 
+        if(!empty($email)){
+            if($this->data[$this->alias]['id'] == $email['User']['id']){
+                return true; 
+            }else{
+                return false; 
+            }
+        }else{
+            return true; 
+        }
+    }
+    
+    public function checkPassword($check) {
+    	$pass = $this->find('first', array(
+    		'fields' => array(
+    			'User.password'
+    		),
+    		'conditions' => array(
+    			'User.id' => CakeSession::read("Auth.User.id")
+    		)
+    	));
+    	if($pass['User']['password'] == AuthComponent::password($check['currentPassword'])){
+    		return true;
+    	}
+    	return false;
     }
      
     public function alphaNumericDashUnderscore($check) {
