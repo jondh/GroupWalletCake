@@ -49,10 +49,10 @@ class WalletRelation extends AppModel {
 			),
             'conditions' => array(
                 'Wallet.user_id' => $this->data[$this->name][$user_id[1]],
-                'Wallet.wallet_id' => $wallet_id
+                'Wallet.id' => $wallet_id
             ),
             'fields' => array(
-            	'Wallet.user_id', 'Wallet.wallet_id'
+            	'Wallet.user_id', 'Wallet.id'
             )
         ));
         

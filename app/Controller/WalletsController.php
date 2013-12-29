@@ -33,7 +33,7 @@
 						'alias' => 'WalletRelations',
 						'type' => 'INNER',
 						'conditions' => array(
-							'Wallet.wallet_id = WalletRelations.wallet_id'
+							'Wallet.id = WalletRelations.wallet_id'
 						)
 					),
 					array(
@@ -67,7 +67,7 @@
 					$repeat = false;
 					if($i != 0){
 						for($k = 0; $k < count($uniqueWallets); $k++){
-							if($wallets[$i]['Wallet']['wallet_id'] == $uniqueWallets[$k]['Wallet']['wallet_id']){
+							if($wallets[$i]['Wallet']['id'] == $uniqueWallets[$k]['Wallet']['id']){
 								$repeat = true;
 								break;
 							}
@@ -75,9 +75,9 @@
 					}
 					if($repeat == false){
 						$wallets[$i]['money']['owe'] = $this->Get->getOweWallet(
-							$this->Auth->user('id'), $wallets[$i]['Wallet']['wallet_id']);
+							$this->Auth->user('id'), $wallets[$i]['Wallet']['id']);
 						$wallets[$i]['money']['owed'] = $this->Get->getOwedWallet(
-							$this->Auth->user('id'), $wallets[$i]['Wallet']['wallet_id']);
+							$this->Auth->user('id'), $wallets[$i]['Wallet']['id']);
 						$wallets[$i]['money']['total'] = $wallets[$i]['money']['owed'] - $wallets[$i]['money']['owe'];
 				
 						$uniqueWallets[$j] = $wallets[$i];
@@ -114,7 +114,7 @@
 						'alias' => 'WalletRelations',
 						'type' => 'INNER',
 						'conditions' => array(
-							'Wallet.wallet_id = WalletRelations.wallet_id'
+							'Wallet.id = WalletRelations.wallet_id'
 						)
 					)
 				),
@@ -132,12 +132,16 @@
 					return $this->redirect(array('action' => 'index')); 
        			}
        		}
-       		// make the wallet inactive is user is only one in wallet
-       		$this->Wallet->set($wallet_id);
+       		// check if wallet exists and make the wallet inactive if user is only one in wallet
+       		$this->Wallet->id = $wallet_id;
        		
-       		if ($this->Wallet->saveField('active', '0')) {
+       		if(!$this->Wallet->exists()){
+       			$this->Session->setFlash(__('Cannot find wallet'));
+       		}
+       		else if ($this->Wallet->saveField('active', '0')) {
 				$this->Session->setFlash(__('Successfully removed wallet'));
-			}else { 
+			}
+			else { 
 				$this->Session->setFlash(__('An error occured when deleting the wallet'));
 			}
 			return $this->redirect(array('action' => 'index')); 

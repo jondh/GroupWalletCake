@@ -6,14 +6,14 @@
 	    <div class="panel panel-primary">
 	      <div class="panel-heading">
 	        <h3 class="panel-title"><?php echo $this->Html->link($wallet['Wallet']['name'], 
-			array('controller' => 'WalletRelations', 'action' => 'index', $wallet['Wallet']['wallet_id'])); ?></h3>
+			array('controller' => 'WalletRelations', 'action' => 'index', $wallet['Wallet']['id'])); ?></h3>
 	      </div>
 	      <div class="panel-body">
 	        Money You Owe: <?php echo $wallet['money']['owe']; ?>
 			<br>
 			Money Owed to you: <?php echo $wallet['money']['owed']; ?> 
 			<br>
-			Total: <?php echo $this->Html->link($wallet['money']['total'], array('controller' => 'Transactions', 'action' => 'getTotalWallet', $wallet['Wallet']['wallet_id'])); ?>
+			Total: <?php echo $this->Html->link($wallet['money']['total'], array('controller' => 'Transactions', 'action' => 'getTotalWallet', $wallet['Wallet']['id'])); ?>
 			<br>
 			Date Created: <?php echo $wallet['Wallet']['date']; ?>
 			<br>
