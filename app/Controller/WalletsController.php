@@ -21,7 +21,7 @@
 					'Wallet.user_id' => $this->Auth->user('id')
 				),
        			'fields' => array(
-       				'Wallet.*', 'User.firstName', 'User.lastName'
+       				'Wallet.*', 'User.firstName', 'User.lastName', 'User.id'
        			)
 			));
 			// find wallets that user is in
@@ -48,7 +48,7 @@
        				'WalletRelations.user_id' => $this->Auth->user('id')
        			),
        			'fields' => array(
-       				'Wallet.*', 'User.firstName', 'User.lastName'
+       				'Wallet.*', 'User.firstName', 'User.lastName', 'User.id'
        			)
        		));
        		// combine the wallets
