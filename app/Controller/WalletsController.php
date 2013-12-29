@@ -18,7 +18,8 @@
 					)
 				),
 				'conditions' => array(
-					'Wallet.user_id' => $this->Auth->user('id')
+					'Wallet.user_id' => $this->Auth->user('id'),
+					'Wallet.active' => '1'
 				),
        			'fields' => array(
        				'Wallet.*', 'User.firstName', 'User.lastName', 'User.id'
@@ -45,7 +46,8 @@
 					)
 				),
        			'conditions' => array(
-       				'WalletRelations.user_id' => $this->Auth->user('id')
+       				'WalletRelations.user_id' => $this->Auth->user('id'),
+       				'Wallet.active' => '1'
        			),
        			'fields' => array(
        				'Wallet.*', 'User.firstName', 'User.lastName', 'User.id'
@@ -97,6 +99,48 @@
 				}
 				$this->Session->setFlash(__('Unable tho add your wallet'));
 			}
+		}
+		
+		public function delete($wallet_id = 0){
+			if($wallet_id == 0){
+				$this->Session->setFlash(__('Please enter a valid wallet id'));
+				return $this->redirect(array('action' => 'index')); 
+			}
+			// find everyone else in the wallet
+			$users = $this->Wallet->find('all', array(
+				'joins' => array(
+					array(
+						'table' => 'wallet_relations',
+						'alias' => 'WalletRelations',
+						'type' => 'INNER',
+						'conditions' => array(
+							'Wallet.wallet_id = WalletRelations.wallet_id'
+						)
+					)
+				),
+       			'conditions' => array(
+       				'WalletRelations.wallet_id' => $wallet_id
+       			),
+       			'fields' => array(
+       				'WalletRelations.user_id'
+       			)
+       		));
+       		// check if anyone else is in the wallet
+       		for($i = 0; $i < count($users); $i++){
+       			if($users[$i]['WalletRelations']['user_id'] != $this->Auth->user('id')){
+       				$this->Session->setFlash(__('Make sure that everybody is removed / paid off from the wallet before deleting'));
+					return $this->redirect(array('action' => 'index')); 
+       			}
+       		}
+       		// make the wallet inactive is user is only one in wallet
+       		$this->Wallet->set($wallet_id);
+       		
+       		if ($this->Wallet->saveField('active', '0')) {
+				$this->Session->setFlash(__('Successfully removed wallet'));
+			}else { 
+				$this->Session->setFlash(__('An error occured when deleting the wallet'));
+			}
+			return $this->redirect(array('action' => 'index')); 
 		}
 	}
 ?>

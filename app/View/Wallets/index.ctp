@@ -1,7 +1,7 @@
 <?php ?>
 <h1><?php echo $this->Html->link('New Wallet', array('controller' => 'wallets', 'action' => 'add'), array('class' => 'btn btn-primary btn-lg')); ?></h1>
 
-<?php foreach ($wallets as $wallet): ?> 
+<?php foreach ($wallets as $wallet): /* have a delete button followed by an are you sure popup */ ?> 
 	<div class="row">
 	    <div class="panel panel-primary">
 	      <div class="panel-heading">
