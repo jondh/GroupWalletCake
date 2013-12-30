@@ -24,3 +24,5 @@
 	</div>  	
 <?php endforeach; ?>
 <?php unset($walletRelation); ?>
+
+<h1><?php echo $this->Html->link('Delete Wallet', array('controller' => 'wallets', 'action' => 'delete', $wallet_id), array('class' => 'btn btn-lg btn-danger')); ?></h1>

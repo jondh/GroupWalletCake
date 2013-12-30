@@ -159,6 +159,7 @@
 				$user['User']['firstName'] = $this->Auth->user('firstName');
 				$user['User']['lastName'] = $this->Auth->user('lastName');
 				$this->set('user', $user);
+				$this->set('self', '1');//checks if user is in its own profile
 			}
 			else{
 				$user = $this->User->find('first', array(
@@ -170,6 +171,12 @@
 					)
 				));
 				$this->set('user', $user);
+				if($user_id == $this->Auth->user('id')){
+					$this->set('self', '1');
+				}	
+				else{
+					$this->set('self', '0');
+				}
 			}
 		}
 	}
