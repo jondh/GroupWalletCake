@@ -53,6 +53,10 @@ $cakeDescription = __d('cake_dev', 'Group Wallet');
       <script src="../../assets/js/html5shiv.js"></script>
       <script src="../../assets/js/respond.min.js"></script>
     <![endif]-->
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="https://code.jquery.com/jquery.js"></script>
+	<!-- Include all compiled plugins (below), or include individual files as needed -->
+	<script src="../../../../../dist/js/bootstrap.min.js"></script>
  
 </head>
 
