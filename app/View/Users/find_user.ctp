@@ -36,15 +36,13 @@ echo $this->Session->flash();
 		});
 		$input.data( "ui-autocomplete" )._renderItem = function( ul, item ) {
 			if(item['User']['inWallet'] == 0){
-				return $( '<li onclick="addUser('+item['User']['id']+')">' ).append( '<a><div id="userSearchDropDown">\
-						'+item['User']['username']+' '+item['User']['email']+'<br>\
-						'+item['User']['firstName']+' '+item['User']['lastName']+'</div></a>' )
+				return $( '<li onclick="addUser('+item['User']['id']+')">' ).append( '<a><center><div id="userSearchDropDown">\
+						'+item['User']['username']+' | '+item['User']['firstName']+' '+item['User']['lastName']+'</div></center></a>' )
 					.appendTo( ul );
 			}
 			else{
-				return $( '<li>' ).append( '<a><div id="userSearchDropDown">\
-						*'+item['User']['username']+' '+item['User']['email']+'<br>\
-						*'+item['User']['firstName']+' '+item['User']['lastName']+'</div></a>' )
+				return $( '<li>' ).append( '<a><center><div id="userSearchDropDown">\
+						In Wallet: '+item['User']['username']+' | '+item['User']['firstName']+' '+item['User']['lastName']+'</div></center></a>' )
 					.appendTo( ul );
 			}
 		};
