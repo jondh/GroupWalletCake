@@ -92,6 +92,35 @@
 			return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
 			
 		}
+		
+		public function leave($wallet_id){
+			if(!$wallet_id){
+				$this->Session->setFlash(__('There is not a wallet id'));
+				return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
+			}
+			
+			$owe = $this->Get->getOweWallet(
+				$this->Auth->user('id'), $wallet_id);
+			$owed = $this->Get->getOwedWallet(
+				$this->Auth->user('id'), $wallet_id);
+			
+			$this->WalletRelation->id = $wallet_id;
+       		
+       		if(!$this->WalletRelaion->exists()){
+       			$this->Session->setFlash(__('Cannot find wallet / Cannot currently leave a wallet you created'));
+       		}
+       		else if ( (($owe - $owed) > 0.05) || (($owe - $owed) < -0.05)) {
+       			$this->Session->setFlash(__('You have to clear the debts before you can leave'));
+       		}
+       		else if ($this->WalletRelation->saveField('active', '0')) {
+				$this->Session->setFlash(__('Successfully left wallet'));
+				return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
+			}
+			else { 
+				$this->Session->setFlash(__('An error occured when deleting the wallet'));
+			}
+			return $this->redirect(array('action' => 'index', $wallet_id));
+		}
 	
 	}
 ?>

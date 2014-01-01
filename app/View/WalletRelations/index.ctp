@@ -1,4 +1,8 @@
-<h1><?php echo $this->Html->link('Add User', array('controller' => 'users', 'action' => 'findUser', $wallet_id), array('class' => 'btn btn-primary btn-lg')); ?></h1>
+<?php ?>
+<h1><?php 
+echo $this->Html->link('Add User', array('controller' => 'users', 'action' => 'findUser', $wallet_id), array('class' => 'btn btn-primary btn-lg')); 
+echo $this->Html->link('Leave Wallet', array('controller' => 'WalletRelations', 'action' => 'leave', $wallet_id), array('class' => 'btn btn-primary btn-lg')); 
+?></h1>
 
 
 <?php foreach ($wallet_relations as $walletRelation): ?>  
