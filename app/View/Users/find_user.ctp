@@ -22,7 +22,6 @@ echo $this->Session->flash();
 </form>
 
 <script>
-
 	function addUser(userID){
 		document.getElementById('postUser').action = "../../WalletRelations/addUser/"+<?php echo $wallet_id; ?>+'/'+userID+'/';	
 		document.getElementById('postUser').submit();

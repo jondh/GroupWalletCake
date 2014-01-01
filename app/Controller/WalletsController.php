@@ -47,7 +47,8 @@
 				),
        			'conditions' => array(
        				'WalletRelations.user_id' => $this->Auth->user('id'),
-       				'Wallet.active' => '1'
+       				'Wallet.active' => '1',
+       				'WalletRelations.active_user' => '1'
        			),
        			'fields' => array(
        				'Wallet.*', 'User.firstName', 'User.lastName', 'User.id'
@@ -95,7 +96,7 @@
 				$this->request->data['Wallet']['user_id'] = $this->Auth->user('id');
 				if($this->Wallet->save($this->request->data)){
 					$this->Session->setFlash(__('Your wallet has been saved'));
-					return $this->redirect(array('action' => 'index')); 
+					return $this->redirect(array('controller' => 'WalletRelations', 'action' => 'addUser', $this->Wallet->id, $this->Auth->user('id')));
 				}
 				$this->Session->setFlash(__('Unable tho add your wallet'));
 			}
@@ -119,7 +120,8 @@
 					)
 				),
        			'conditions' => array(
-       				'WalletRelations.wallet_id' => $wallet_id
+       				'WalletRelations.wallet_id' => $wallet_id,
+       				'WalletRelations.active_user' => '1'
        			),
        			'fields' => array(
        				'WalletRelations.user_id'

@@ -1,6 +1,7 @@
 <?php ?>
 <h1><?php 
 echo $this->Html->link('Add User', array('controller' => 'users', 'action' => 'findUser', $wallet_id), array('class' => 'btn btn-primary btn-lg')); 
+echo " ";
 echo $this->Html->link('Leave Wallet', array('controller' => 'WalletRelations', 'action' => 'leave', $wallet_id), array('class' => 'btn btn-primary btn-lg')); 
 ?></h1>
 
@@ -18,8 +19,6 @@ echo $this->Html->link('Leave Wallet', array('controller' => 'WalletRelations', 
 			<br>
 			Total: <?php echo $this->Html->link($walletRelation['money']['total'],
 				array('controller' => 'Transactions', 'action' => 'getTotalUserWallet', $walletRelation['WalletRelation']['wallet_id'], $walletRelation['WalletRelation']['user_id'])); ?> 
-			<br>
-			Activity: <?php echo $walletRelation['WalletRelation']['activity']; ?> 
 			<br>
 			<?php echo $this->Html->link('Add Transaction', 
 				array('controller' => 'Transactions', 'action' => 'add', $walletRelation['WalletRelation']['wallet_id'], $walletRelation['WalletRelation']['user_id']), array('class' => 'btn btn-primary btn-lg'));?>

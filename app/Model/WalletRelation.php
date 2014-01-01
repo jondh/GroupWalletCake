@@ -41,14 +41,14 @@ class WalletRelation extends AppModel {
 				array(
 					'table' => 'wallets',
 					'alias' => 'Wallet',
-					'type' => 'INNER',
+					'type' => 'RIGHT',
 					'conditions' => array(
 						'WalletRelation.user_id = Wallet.user_id'
 					)
 				)
 			),
             'conditions' => array(
-                'Wallet.user_id' => $this->data[$this->name][$user_id[1]],
+                'Wallet.user_id' => CakeSession::read("Auth.User.id"),
                 'Wallet.id' => $wallet_id
             ),
             'fields' => array(
@@ -62,7 +62,7 @@ class WalletRelation extends AppModel {
         
         $joinedWallets = $this->find('first', array(
         	'conditions' => array(
-        		'WalletRelation.user_id' => $this->data[$this->name][$user_id[1]],
+        		'WalletRelation.user_id' => CakeSession::read("Auth.User.id"),
                 'WalletRelation.wallet_id' => $wallet_id
         	),
         	'fields' => array(
