@@ -7,7 +7,7 @@ echo $this->Session->flash();
     <fieldset>
         <legend><?php echo __('Add Transaction'); ?></legend>
         <?php
-        echo $this->Form->radio('selection', array('owe', 'owed'));
+        echo $this->Form->radio('selection', array('owe', 'owed'), array('separator'=>'<br>'));
 		echo $this->Form->input('amount');
 		echo $this->Form->input('comments');
         ?>
