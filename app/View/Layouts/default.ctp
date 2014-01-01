@@ -100,11 +100,15 @@ $cakeDescription = __d('cake_dev', 'Group Wallet');
 
 			<?php echo $this->fetch('content'); ?>
 		</div>
-		<div id="footer">
-		</div>
+  	  <!-- FOOTER -->
+  	  <hr class="featurette-divider">
+  	  <footer>
+  	  	<p class="pull-right"><a href="#">Back to top</a></p>
+  	    <p>&copy; <a href="http://whereone.com">Whereone 2013</a> &middot; </p>
+  	  </footer>
 	</div>
-	<?php echo $this->element('sql_dump');
-	      echo $this->Js->writeBuffer();
+	<?php //echo $this->element('sql_dump');
+	      //echo $this->Js->writeBuffer();
 	?>
 	
     <script src="../../assets/js/jquery.js"></script>
