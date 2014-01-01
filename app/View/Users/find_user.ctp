@@ -13,10 +13,10 @@ echo $this->Session->flash();
         						));
         ?>
     </fieldset>
-     <?php echo $this->Form->end('Submit', array('id' => 'submitHide')); ?>
 </div>
 
 <table id="userResults">
+<form id="hide"><input id="hide" type="submit"></form>
 </table>
 <form id="postUser" action="../../Wallets" method="post">
 </form>
@@ -27,7 +27,7 @@ echo $this->Session->flash();
 		document.getElementById('postUser').submit();
 	}
 	
-	$("#submitHide").hide();
+	$("#hide").hide();
 
 	$(function(){
 		
