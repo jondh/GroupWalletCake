@@ -1,4 +1,9 @@
 <?php ?>
+
+<div class="jumbotron">
+  <p class="lead">This is a wallet. In here you can search for and add people to share with or you can choose to leave a wallet. Once someone is added, then how much is owed between you and that person will be displayed. Clicking on the total gives you a log of transactions! </p>
+</div>
+
 <h1><?php 
 echo $this->Html->link('Add User', array('controller' => 'users', 'action' => 'findUser', $wallet_id), array('class' => 'btn btn-primary btn-lg')); 
 echo " ";

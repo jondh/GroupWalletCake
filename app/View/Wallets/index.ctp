@@ -1,4 +1,9 @@
 <?php ?>
+
+<div class="jumbotron">
+  <p class="lead">Welcome! This is your home page. Her you can add wallets to your account. Wallets can be made for groups of friends or family. You can make them for different trips or outings and you can have multiple people in each wallet. Once a Wallet is created you can add users by clicking on the wallet name. Create a wallet and start sharing!</p>
+</div>
+
 <h1><?php echo $this->Html->link('New Wallet', array('controller' => 'wallets', 'action' => 'add'), array('class' => 'btn btn-primary btn-lg')); ?></h1>
 
 <?php
