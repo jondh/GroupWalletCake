@@ -36,6 +36,44 @@ class WalletRelation extends AppModel {
     }
  
  	function checkBelongsTo($wallet_id, $user_id) {
+ 		if($this->data['WalletRelation']['wallet_id'] == 0){
+ 		
+			$friends = $this->find('first', array(
+				'joins' =>array(
+					array(
+						'table' => 'friends',
+						'alias' => 'Friend',
+						'type' => 'RIGHT',
+						'conditions' => array(
+							'WalletRelation.user_id = Friend.user_id_1'
+						)
+					)
+				),
+				'conditions' => array(
+					'OR' => array(
+						'AND' => array(
+							'Friend.user_id_1' => $this->data['WalletRelation']['user_id'],
+							'Friend.user_id_2' => CakeSession::read("Auth.User.id")
+						),
+						'AND' => array(
+							'Friend.user_id_1' => CakeSession::read("Auth.User.id"),
+							'Friend.user_id_2' => $this->data['WalletRelation']['user_id']
+						)
+					)
+				),
+				'fields' => array(
+					'Friend.id'
+				)
+			));
+		
+			if(!empty($friends)){
+				return true;
+			}
+			else{
+				return false;
+			}
+ 		}
+ 	
  		$createdWallets = $this->find('first', array(
         	'joins' => array(
 				array(

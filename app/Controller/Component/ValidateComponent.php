@@ -5,8 +5,8 @@ App::import('Model', 'WalletRelation');
  
 class ValidateComponent extends Component {
  
-    public function validateWalletUser($user_id = 0, $wallet_id = 0) {
-    	if($user_id > 0 && $wallet_id > 0){
+    public function validateWalletUser($user_id = 0, $wallet_id = -1) {
+    	if($user_id > 0 && $wallet_id > -1){
     		$WalletRelationModel = ClassRegistry::init('WalletRelation');
     	
     		$thisdata['WalletRelation']['wallet_id'] = $wallet_id;

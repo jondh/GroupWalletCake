@@ -5,8 +5,8 @@ App::import('Model', 'Transaction');
  
 class GetComponent extends Component {
  
-    public function getOweUserWallet($user_id = 0, $other_user_id = 0, $wallet_id = 0) {
-    	if($user_id > 0 && $other_user_id > 0 && $wallet_id > 0){
+    public function getOweUserWallet($user_id = 0, $other_user_id = 0, $wallet_id = -1) {
+    	if($user_id > 0 && $other_user_id > 0 && $wallet_id > -1){
     		$TransactionModel = ClassRegistry::init('Transaction');
     	
 			$amount = $TransactionModel->find('all', array(
@@ -25,8 +25,8 @@ class GetComponent extends Component {
 		}
     }
 	
-    public function getOwedUserWallet($user_id = 0, $other_user_id = 0, $wallet_id = 0) {
-        if($user_id > 0 && $other_user_id > 0 && $wallet_id > 0){
+    public function getOwedUserWallet($user_id = 0, $other_user_id = 0, $wallet_id = -1) {
+        if($user_id > 0 && $other_user_id > 0 && $wallet_id > -1){
     		$TransactionModel = ClassRegistry::init('Transaction');
     	
 			$amount = $TransactionModel->find('all', array(
@@ -83,8 +83,8 @@ class GetComponent extends Component {
 		}
     }
 	
-    public function getOweWallet($user_id = 0, $wallet_id = 0) {
-        if($user_id > 0 && $wallet_id > 0){
+    public function getOweWallet($user_id = 0, $wallet_id = -1) {
+        if($user_id > 0 && $wallet_id > -1){
     		$TransactionModel = ClassRegistry::init('Transaction');
     	
 			$amount = $TransactionModel->find('all', array(
@@ -102,8 +102,8 @@ class GetComponent extends Component {
 		}
     }
 	
-    public function getOwedWallet($user_id = 0, $wallet_id = 0) {
-        if($user_id > 0 && $wallet_id > 0){
+    public function getOwedWallet($user_id = 0, $wallet_id = -1) {
+        if($user_id > 0 && $wallet_id > -1){
     		$TransactionModel = ClassRegistry::init('Transaction');
     	
 			$amount = $TransactionModel->find('all', array(

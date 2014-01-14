@@ -26,7 +26,7 @@ echo $this->Html->link('Leave Wallet', array('controller' => 'WalletRelations', 
 				array('controller' => 'Transactions', 'action' => 'getTotalUserWallet', $walletRelation['WalletRelation']['wallet_id'], $walletRelation['WalletRelation']['user_id'])); ?> 
 			<br>
 			<?php echo $this->Html->link('Add Transaction', 
-				array('controller' => 'Transactions', 'action' => 'add', $walletRelation['WalletRelation']['wallet_id'], $walletRelation['WalletRelation']['user_id']), array('class' => 'btn btn-primary btn-lg'));?>
+				array('controller' => 'Transactions', 'action' => 'add', $walletRelation['WalletRelation']['wallet_id'], $walletRelation['WalletRelation']['user_id'], 1), array('class' => 'btn btn-primary btn-lg'));?>
 	      </div>
 	    </div>
 	</div>  	
