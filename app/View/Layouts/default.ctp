@@ -77,6 +77,7 @@ $cakeDescription = __d('cake_dev', 'Group Wallet');
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
+          	<li><a href="../../../../../GroupWalletCake/Friends/">Friends</a></li>
 			<li><a href="../../../../../GroupWalletCake/Users/showProfile/">Profile</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">

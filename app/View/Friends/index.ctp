@@ -8,6 +8,29 @@
 echo $this->Html->link('Find Friends', array('controller' => 'users', 'action' => 'findUser', 0), array('class' => 'btn btn-primary btn-lg')); 
 ?></h1>
 
+<?php foreach($requestsRec as $Request): ?>
+	<div class="row">
+	    <div class="panel panel-primary">
+	      <div class="panel-heading">
+	        <h3 class="panel-title"> Friend Request </h3>
+	      </div>
+	      <div class="panel-body">
+	        <?php 
+	        	if(($Request['User']['firstName'] == "") && ($Request['User']['lastName'] == "")){
+	        		echo $Request['User']['username'];
+	        	}
+	        	else{
+	        		echo $Request['User']['firstName'] . " " . $Request['User']['lastName']; 	
+	        	}
+	        ?>
+	        <br>
+			<?php echo $this->Html->link('Accept', 
+				array('controller' => 'Friends', 'action' => 'accept', $Request['Friend']['id']), array('class' => 'btn btn-primary btn-lg'));?>
+	      </div>
+	    </div>
+	</div>  
+<?php unset($Request); ?>	
+<?php endforeach; ?>
 
 <?php foreach ($friends as $Friend): ?>  
 	<div class="row">

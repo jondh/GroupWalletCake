@@ -100,24 +100,8 @@
 			if ( $this->request->is('ajax') ) {
 			 	$this->autoRender = false;
     			$this->layout = 'ajax';
-	            $dup=$this->User->find('all', array(
-	            	'joins' => array(
-	            		array(
-	            			'table' => 'wallet_relations',
-	            			'alias' => 'WalletRelation',
-	            			'type'  => 'INNER',
-	            			'conditions' => array(
-								'User.id = WalletRelation.user_id'
-							)
-	            		)
-	            	),
-	            	'conditions' => array(
-	            		'WalletRelation.wallet_id' => $wallet_id
-	            	),
-	            	'feilds' => 'User.id'
-	            ));
-	            
-	            $users=$this->User->find('all', array(
+    			
+    			 $users=$this->User->find('all', array(
 	            	'conditions' => array(
 	            		'OR' => array(
 	            			'User.username LIKE'=>'%'.$_GET['term'].'%',
@@ -127,23 +111,112 @@
 	            		)
 	            	)
 	            ));
-	            
-	            for($i = 0; $i < count($users); $i++){
-	            	$users[$i]['User']['inWallet'] = '0';
-	            	for($j = 0; $j < count($dup); $j++){
-	            		if($users[$i]['User']['id'] == $dup[$j]['User']['id']){
-							$users[$i]['User']['inWallet'] = '1';
-							break;           			
-	            		}
-	            	}
-	            }
-	            
-	            echo json_encode($users);
+	            /*
+		         *	Find out if person is already in the wallet  
+	             */
+	            if($wallet_id > 0){
+					$dup=$this->User->find('all', array(
+						'joins' => array(
+							array(
+								'table' => 'wallet_relations',
+								'alias' => 'WalletRelation',
+								'type'  => 'INNER',
+								'conditions' => array(
+									'User.id = WalletRelation.user_id'
+								)
+							)
+						),
+						'conditions' => array(
+							'WalletRelation.wallet_id' => $wallet_id
+						),
+						'feilds' => 'User.id'
+					));
+				
+			   
+				
+					for($i = 0; $i < count($users); $i++){
+						$users[$i]['User']['inWallet'] = '0';
+						for($j = 0; $j < count($dup); $j++){
+							if($users[$i]['User']['id'] == $dup[$j]['User']['id']){
+								$users[$i]['User']['inWallet'] = '1';
+								break;           			
+							}
+						}
+					}
+				
+					echo json_encode($users);
+				}
+				/*
+				 *	Find out if person is already friend, or if a request has been sent
+				 */
+				else if($wallet_id == 0){
+					/*
+					 *	Do a query for all rows in friends table where either user_id_1
+					 *	or user_id_2 is the user and active = 1
+					 */
+					$friends = $this->User->find('all', array(
+						'joins' => array(
+							array(
+								'table' => 'friends',
+								'alias' => 'Friend',
+								'type' => 'RIGHT',
+								'conditions' => array(
+									'User.id = Friend.user_id_1',
+									'User.id = Friend.user_id_2'
+								)
+							)
+						),
+						'conditions' => array(
+							'OR' => array(
+								'Friend.user_id_1' => $this->Auth->user('id'),
+								'Friend.user_id_2' => $this->Auth->user('id')
+							),
+							'Friend.active' => '1'
+						),
+						'fields' => array(
+							'Friend.user_id_1', 'Friend.user_id_2', 'Friend.accept'
+						)
+					));
+					/*
+					 *	Check if searched user is already a friend or if a request has been sent
+					 *  	the ['User']['inWallet'] is used to signify this ->
+					 *		0 -> not a friend
+					 *		1 -> a friend
+					 *		2 -> user sent request
+					 *		3 -> user received request
+					 */
+					for($i = 0; $i < count($users); $i++){
+						$users[$i]['User']['inWallet'] = '0';
+						for($j = 0; $j < count($friends); $j++){
+							if($users[$i]['User']['id'] == $friends[$j]['Friend']['user_id_1']){
+								if($friends[$j]['Friend']['accept'] == 1){
+									$users[$i]['User']['inWallet'] = '1';
+								}
+								else{
+									$users[$i]['User']['inWallet'] = '3';
+								}
+								break;           			
+							}
+							else if($users[$i]['User']['id'] == $friends[$j]['Friend']['user_id_2']){
+								if($friends[$j]['Friend']['accept'] == 1){
+									$users[$i]['User']['inWallet'] = '1';
+								}
+								else{
+									$users[$i]['User']['inWallet'] = '2';
+								}
+								break;             			
+							}
+						}
+					}
+					
+					echo json_encode($users);
+					
+				} // end else if($wallet_id == 0)
 	        }
 		}
 		
-		public function findUser($wallet_id){
-			if($wallet_id){
+		public function findUser($wallet_id = -1){
+			if($wallet_id > -1){
 				$this->set('wallet_id', $wallet_id);
 			}
 			else{

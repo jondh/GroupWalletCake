@@ -32,7 +32,7 @@
 					'active' => '1'
 				),
 				'fields' => array(
-					'User.*'
+					'Friend.id', 'User.*'
 				)
 			));
 			$this->set('requestsRec', $requestsRec);
@@ -84,9 +84,10 @@
 			
 			// join the friend relationships together and find the money for each
 			$size = count($friends0) + count($friends1);
+			$firstSize = count($friends0);
 			for($i = 0; $i < $size; $i++){
-				if($i >= count($friends0)){
-					$friends0[$i] = $friends1[$i - count($friends0)];
+				if($i >= $firstSize){
+					$friends0[$i] = $friends1[$i - $firstSize];
 				}
 				// get money for transactions not in any wallet
 				$friends0[$i]['money']['owe'] = $this->Get->getOweUserWallet(
@@ -104,6 +105,71 @@
 			}
 			$this->set('friends', $friends0);
 		}	
+		
+		/*
+		 * 	This function sends a friend request to $other_user_id
+		 */
+		public function add($other_user_id){
+			if($other_user_id){
+			
+				if($this->request->is('post') || $this->request->is('get')){
+					$this->Friend->create();
+					$this->request->data['Friend']['user_id_1'] = $this->Auth->user('id');
+					$this->request->data['Friend']['user_id_2'] = $other_user_id;
+					
+					if ($this->Friend->save($this->request->data)) {
+						 $this->Session->setFlash(__('Sent friend request'));
+						 return $this->redirect(array('controller' => 'Friends', 'action' => 'index'));
+					}
+					$this->Session->setFlash(__('The request was not sent. Please try again'));
+				}
+				$this->Session->setFlash(__('The request was not post'));
+				return $this->redirect(array('controller' => 'Users', 'action' => 'showProfile'));
+			}
+			
+			$this->Session->setFlash(__('Thats not a person :/'));
+			return $this->redirect(array('controller' => 'Users', 'action' => 'showProfile'));
+		}
+		
+		/*
+		 *	This function accepts a friends request with the given row id
+		 */
+		public function accept($id){
+			if($id){
+				$this->Friend->id = $id;
+                if(!$this->Friend->exists()){
+      				$this->Session->setFlash(__('Unable to find User.'));
+      				return $this->redirect(array('controller' => 'Users', 'action' => 'showProfile'));
+   				}
+   				$vali = $this->Friend->find('first', array(
+   					'conditions' => array(
+   						'OR' => array(
+   							'Friend.user_id_1' => $this->Auth->user('id'),
+   							'Friend.user_id_2' => $this->Auth->user('id')
+   						),
+   						'Friend.id' => $id
+   					),
+   					'fields' => array(
+   						'Friend.id'
+   					)
+   				));
+   				if(!$vali){
+   					$this->Session->setFlash(__('You were shady'));
+   					return $this->redirect(array('controller' => 'Users', 'action' => 'showProfile'));
+   				}
+   				
+   				if ($this->Friend->saveField('accept', '1')) {
+					$this->Session->setFlash(__('Friend added'));
+					return $this->redirect(array('controller' => 'Friends', 'action' => 'index'));
+				}
+				else{
+					$this->Session->setFlash(__('Unable to accept friend request'));
+					return $this->redirect(array('controller' => 'Friends', 'action' => 'index'));
+				}
+			}
+			$this->Session->setFlash(__('No id provided'));
+			return $this->redirect(array('controller' => 'Users', 'action' => 'showProfile'));
+		} 
 		
 	}
 ?>

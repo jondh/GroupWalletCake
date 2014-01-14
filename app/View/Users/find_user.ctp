@@ -23,8 +23,15 @@ echo $this->Session->flash();
 
 <script>
 	function addUser(userID){
-		document.getElementById('postUser').action = "../../WalletRelations/addUser/"+<?php echo $wallet_id; ?>+'/'+userID+'/';	
-		document.getElementById('postUser').submit();
+		
+		if(<?php echo $wallet_id; ?> > 0){
+			document.getElementById('postUser').action = "../../WalletRelations/addUser/"+<?php echo $wallet_id; ?>+'/'+userID+'/';	
+			document.getElementById('postUser').submit();
+		}
+		else if(<?php echo $wallet_id; ?> == 0){
+			document.getElementById('postUser').action = "../../Friends/add/"+userID+'/';
+			document.getElementById('postUser').submit();
+		}
 	}
 	
 	$("#hide").hide();
@@ -42,7 +49,7 @@ echo $this->Session->flash();
 			}
 			else{
 				return $( '<li>' ).append( '<a><center><div id="userSearchDropDown">\
-						In Wallet: '+item['User']['username']+' | '+item['User']['firstName']+' '+item['User']['lastName']+'</div></center></a>' )
+						Previous Relationship: '+item['User']['username']+' | '+item['User']['firstName']+' '+item['User']['lastName']+'</div></center></a>' )
 					.appendTo( ul );
 			}
 		};
