@@ -106,7 +106,7 @@ $cakeDescription = __d('cake_dev', 'Group Wallet');
   	    <p>&copy; <a href="http://whereone.com">Whereone 2013</a> &middot; </p>
   	  </footer>
 	</div>
-	<?php //echo $this->element('sql_dump');
+	<?php echo $this->element('sql_dump');
 	      //echo $this->Js->writeBuffer();
 	?>
 	

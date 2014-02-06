@@ -4,6 +4,7 @@
 		<th>Owe</th>
 		<th>Owed</th>
 		<th>Comments</th>
+		<th>Date (CST)</th>
 	</tr>
 		<?php foreach ($transaction as $Transactions): ?>  
 			<tr>
@@ -18,6 +19,10 @@
 				<td> <?php echo $Transactions['Transaction']['oweUID']; ?> </td>
 				<td> <?php echo $Transactions['Transaction']['owedUID']; ?> </td>
 				<td> <?php echo $Transactions['Transaction']['comments']; ?> </td>
+				<td> <?php 
+						echo $this->Time->format($Transactions['Transaction']['dateTime'], '%B %e, %Y %l:%M %p');
+					?>
+				</td>
 			</tr>
 			
 		<?php endforeach; ?>

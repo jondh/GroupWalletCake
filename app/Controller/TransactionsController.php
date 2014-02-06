@@ -60,21 +60,37 @@
 			$this->set('authUserID', $this->Auth->user('id'));
 		
 			if($wallet_id > -1){
-				$amount = $this->Transaction->find('all', array(
+				$amountOwe = $this->Transaction->find('all', array(
 					'conditions' => array(
 						'wallet_id' => $wallet_id,
-						'OR' => array(
-							'oweUID' => $this->Auth->user('id'),
-							'owedUID' => $this->Auth->user('id')
-						),
-						'OR' => array(
-							'owedUID' => $other_user_id,
-							'oweUID' => $other_user_id
-						),
+						'oweUID' => $this->Auth->user('id'),
+						'owedUID' => $other_user_id,
 					)
 				));
+				
+				$amountOwed = $this->Transaction->find('all', array(
+					'conditions' => array(
+						'wallet_id' => $wallet_id,
+						'owedUID' => $this->Auth->user('id'),
+						'oweUID' => $other_user_id,
+					)
+				));
+				
+				$sizeOwe = count($amountOwe);
+				for($i = 0; $i < count($amountOwed); $i++){
+					$amountOwe[$i + $sizeOwe] = $amountOwed[$i];
+				}
+				// http://stackoverflow.com/questions/8121241/sort-array-based-on-the-datetime-in-php
+				function cmp($a, $b) {
+					if ($a['Transaction']['dateTime'] == $b['Transaction']['dateTime']) {
+						return 0;
+					}
+					return ($a['Transaction']['dateTime'] > $b['Transaction']['dateTime']) ? -1 : 1;
+				}
 
-				$this->set('transaction', $amount);
+				uasort($amountOwe, 'cmp');
+				//////////////////////////////
+				$this->set('transaction', $amountOwe);
 				
 			}
 		}
@@ -113,19 +129,35 @@
 			$this->set('authUserID', $this->Auth->user('id'));
 		
 			if($other_user_id){
-				$amount = $this->Transaction->find('all', array(
+				$amountOwe = $this->Transaction->find('all', array(
 					'conditions' => array(
-						'OR' => array(
-							'oweUID' => $this->Auth->user('id'),
-							'owedUID' => $this->Auth->user('id')
-						),
-						'OR' => array(
-							'owedUID' => $other_user_id,
-							'oweUID' => $other_user_id
-						)
+						'oweUID' => $this->Auth->user('id'),
+						'owedUID' => $other_user_id,
 					)
 				));
-				$this->set('transaction', $amount);
+				
+				$amountOwed = $this->Transaction->find('all', array(
+					'conditions' => array(
+						'owedUID' => $this->Auth->user('id'),
+						'oweUID' => $other_user_id,
+					)
+				));
+				
+				$sizeOwe = count($amountOwe);
+				for($i = 0; $i < count($amountOwed); $i++){
+					$amountOwe[$i + $sizeOwe] = $amountOwed[$i];
+				}
+				// http://stackoverflow.com/questions/8121241/sort-array-based-on-the-datetime-in-php
+				function cmp($a, $b) {
+					if ($a['Transaction']['dateTime'] == $b['Transaction']['dateTime']) {
+						return 0;
+					}
+					return ($a['Transaction']['dateTime'] > $b['Transaction']['dateTime']) ? -1 : 1;
+				}
+
+				uasort($amountOwe, 'cmp');
+				//////////////////////////////
+				$this->set('transaction', $amountOwe);
 			}
 		
 		}

@@ -6,6 +6,8 @@
 			parent::beforeFilter();
        		$this->Auth->allow('login','add');
 		}
+		
+		public $components = array('UploadPic');
 	
 		public function index(){
 		
@@ -250,6 +252,18 @@
 				else{
 					$this->set('self', '0');
 				}
+			}
+		}
+		
+		public function uploadProfilePic(){
+			$this->layout = 'ajax';
+			
+			if($this->request->is('post')){
+				echo $this->UploadPic->uploadProfilePic($this->Auth->user('id'), $this->request->data['URL'], '1', $_FILES['file']);
+				echo $_FILES['file']['name'];
+			}
+			else{
+				echo "no.";
 			}
 		}
 	}
