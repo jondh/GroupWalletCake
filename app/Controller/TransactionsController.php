@@ -1,7 +1,8 @@
 <?php
 	class TransactionsController extends AppController { 
 		
-		public $components = array('Validate');
+		public $components = array('Validate', 'UserData', 'WalletData');
+		//public $components = array('UserData');
 		
 		public function index(){
 		
@@ -19,6 +20,7 @@
 				if($this->request->is('post')){
 					$this->Transaction->create();
 					$this->request->data['Transaction']['wallet_id'] = $wallet_id;
+					$this->request->data['Transaction']['dateTime'] = NULL;
 					
 					if($this->request->data['Transaction']['selection'] == 0){
 						$this->request->data['Transaction']['oweUID'] = $this->Auth->user('id');
@@ -90,6 +92,10 @@
 
 				uasort($amountOwe, 'cmp');
 				//////////////////////////////
+				$wallet['name'] = $this->WalletData->getWalletName($wallet_id);
+				$wallet['id'] = $wallet_id;
+				$this->set('oUser', $this->UserData->getUserName($other_user_id));
+				$this->set('wallet', $wallet);
 				$this->set('transaction', $amountOwe);
 				
 			}
@@ -105,16 +111,67 @@
 			$this->set('authUserID', $this->Auth->user('id'));
 		
 			if($wallet_id){
-				$amount = $this->Transaction->find('all', array(
+				$amountOwe = $this->Transaction->find('all', array(
+					'joins' => array(
+						array(
+							'table' => 'users',
+							'alias' => 'User',
+							'type'  => 'INNER',
+							'conditions' => array(
+								'User.id = Transaction.owedUID'
+							)
+						)
+					),
 					'conditions' => array(
 						'wallet_id' => $wallet_id,
-						'OR' => array(
-							'oweUID' => $this->Auth->user('id'),
-							'owedUID' => $this->Auth->user('id')
-						)
+						'oweUID' => $this->Auth->user('id')
+					),
+					'fields' => array(
+						'Transaction.*', 'User.firstName', 'User.lastName', 'User.username'
 					)
 				));
-				$this->set('transaction', $amount);
+				
+				$amountOwed = $this->Transaction->find('all', array(
+					'joins' => array(
+						array(
+							'table' => 'users',
+							'alias' => 'User',
+							'type'  => 'INNER',
+							'conditions' => array(
+								'User.id = Transaction.oweUID'
+							)
+						)
+					),
+					'conditions' => array(
+						'wallet_id' => $wallet_id,
+						'owedUID' => $this->Auth->user('id')
+					),
+					'fields' => array(
+						'Transaction.*', 'User.firstName', 'User.lastName', 'User.username'
+					)
+				));
+				
+				$sizeOwe = count($amountOwe);
+				for($i = 0; $i < count($amountOwed); $i++){
+					$amountOwe[$i + $sizeOwe] = $amountOwed[$i];
+				}
+				
+				// http://stackoverflow.com/questions/8121241/sort-array-based-on-the-datetime-in-php
+				function cmp($a, $b) {
+					if ($a['Transaction']['dateTime'] == $b['Transaction']['dateTime']) {
+						return 0;
+					}
+					return ($a['Transaction']['dateTime'] > $b['Transaction']['dateTime']) ? -1 : 1;
+				}
+
+				uasort($amountOwe, 'cmp');
+				//////////////////////////////
+				
+				$wallet['name'] = $this->WalletData->getWalletName($wallet_id);
+				$wallet['id'] = $wallet_id;
+				$this->set('wallet', $wallet);
+				
+				$this->set('transaction', $amountOwe);
 			}
 		
 		}
@@ -157,6 +214,9 @@
 
 				uasort($amountOwe, 'cmp');
 				//////////////////////////////
+				
+				$this->set('oUser', $this->UserData->getUserName($other_user_id));
+				
 				$this->set('transaction', $amountOwe);
 			}
 		

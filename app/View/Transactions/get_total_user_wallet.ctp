@@ -1,8 +1,13 @@
+<h1><?php echo $this->Html->link($wallet['name'], 
+				array('controller' => 'WalletRelations', 'action' => 'index', $wallet['id']), array('class' => 'btn btn-primary btn-lg'));?></h1>
+<h1><?php echo $oUser['firstName'] . ' ' . $oUser['lastName']; ?></h1>
+<h4><?php echo $oUser['username']; ?></h4>
+
 <table>
 	<tr>
 		<th>Amount</th>
 		<th>Comments</th>
-		<th>Date (CST)</th>
+		<th>Date (Mountain Time)</th>
 	</tr>
 		<?php foreach ($transaction as $Transactions): ?>  
 			<tr>

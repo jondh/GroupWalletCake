@@ -1,10 +1,11 @@
+<h1><?php echo $wallet['name']; ?></h1>
+
 <table>
 	<tr>
 		<th>Amount</th>
-		<th>Owe</th>
-		<th>Owed</th>
+		<th>Person</th>
 		<th>Comments</th>
-		<th>Date (CST)</th>
+		<th>Date (Mountain Time)</th>
 	</tr>
 		<?php foreach ($transaction as $Transactions): ?>  
 			<tr>
@@ -16,8 +17,7 @@
 				 		echo $Transactions['Transaction']['amount'];
 				 	} ?>
 				</td>
-				<td> <?php echo $Transactions['Transaction']['oweUID']; ?> </td>
-				<td> <?php echo $Transactions['Transaction']['owedUID']; ?> </td>
+				<td> <?php echo $Transactions['User']['username']; ?> </td>
 				<td> <?php echo $Transactions['Transaction']['comments']; ?> </td>
 				<td> <?php 
 						echo $this->Time->format($Transactions['Transaction']['dateTime'], '%B %e, %Y %l:%M %p');
