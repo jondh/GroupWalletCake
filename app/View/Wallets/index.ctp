@@ -26,7 +26,7 @@
 					<br>
 					Money Owed to you: <?php echo $wallet['money']['owed']; ?> 
 					<br>
-					Total: <?php echo $this->Html->link($wallet['money']['total'], array('controller' => 'Transactions', 'action' => 'getTotalWallet', $wallet['Wallet']['id'])); ?>
+					Total Money Spent in Wallet: <?php echo $this->Html->link($wallet['money']['totalEverything'], array('controller' => 'Transactions', 'action' => 'getTotalWallet', $wallet['Wallet']['id'])); ?>
 					<br>
 					Date Created: <?php echo $wallet['Wallet']['date']; ?>
 					<br>

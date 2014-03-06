@@ -1,7 +1,12 @@
 <?php
 	class TransactionsController extends AppController { 
 		
-		public $components = array('Validate', 'UserData', 'WalletData');
+		public function beforeFilter(){
+			parent::beforeFilter();
+       		$this->Auth->allow('addRemote');
+		}
+		
+		public $components = array('Validate', 'UserData', 'WalletData', 'AccessToken');
 		//public $components = array('UserData');
 		
 		public function index(){
@@ -50,6 +55,56 @@
 			 	$this->Session->setFlash(__('You were shady'));
 				$this->redirect($prevPage);
 			 }
+		}
+		
+		public function addRemote(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$trasData['Transaction']['wallet_id'] = $this->request->data['walletID'];
+					if($this->request->data['owe'] == '1'){
+						$trasData['Transaction']['oweUID'] = $this->request->data['userID'];
+						$trasData['Transaction']['owedUID'] = $this->request->data['otherUID'];
+					}
+					else if($this->request->data['owe'] == '0'){
+						$trasData['Transaction']['oweUID'] = $this->request->data['otherUID'];
+						$trasData['Transaction']['owedUID'] = $this->request->data['userID'];
+					}
+					$trasData['Transaction']['amount'] = $this->request->data['amount'];
+					$trasData['Transaction']['comments'] = $this->request->data['comments'];
+					$trasData['Transaction']['dateTime'] = NULL;
+					if ($this->Transaction->save($trasData)) {
+						$result['result'] = 'success';
+						return new CakeResponse(array('body' => json_encode($result)));
+					}
+					else{
+						$result['result'] = 'failure';
+						return new CakeResponse(array('body' => json_encode($result)));
+					}
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}
 		}
 	
 		public function getTotalUserWallet($wallet_id, $other_user_id){
@@ -101,7 +156,7 @@
 			}
 		}
 	
-		public function getTotalWallet($wallet_id){
+		public function getTotalWalletForMe($wallet_id){
 		
 			if(!$this->Validate->validateWalletUser($this->Auth->user('id'), $wallet_id)){
 				$this->Session->setFlash(__('You may not have access to that wallet'));
@@ -151,6 +206,7 @@
 					)
 				));
 				
+				
 				$sizeOwe = count($amountOwe);
 				for($i = 0; $i < count($amountOwed); $i++){
 					$amountOwe[$i + $sizeOwe] = $amountOwed[$i];
@@ -172,6 +228,52 @@
 				$this->set('wallet', $wallet);
 				
 				$this->set('transaction', $amountOwe);
+			}
+		
+		}
+		
+		public function getTotalWallet($wallet_id){
+		
+			if(!$this->Validate->validateWalletUser($this->Auth->user('id'), $wallet_id)){
+				$this->Session->setFlash(__('You may not have access to that wallet'));
+				return $this->redirect(array('controller' => 'Wallets', 'action' => 'index'));
+			}
+		
+			$this->set('authUserID', $this->Auth->user('id'));
+		
+			if($wallet_id){
+				
+				$amount = $this->Transaction->find('all', array(
+					'conditions' => array(
+						'wallet_id' => $wallet_id
+					)
+				));
+				
+				// needs optimizing //
+				for($i = 0; $i < count($amount); $i++){
+					$oweUID = $amount[$i]['Transaction']['oweUID'];
+					$amount[$i]['oweUID'] = $this->UserData->getUserName($oweUID);
+					
+					$owedUID = $amount[$i]['Transaction']['owedUID'];
+					$amount[$i]['owedUID'] = $this->UserData->getUserName($owedUID);
+				}
+				
+				// http://stackoverflow.com/questions/8121241/sort-array-based-on-the-datetime-in-php
+				function cmp($a, $b) {
+					if ($a['Transaction']['dateTime'] == $b['Transaction']['dateTime']) {
+						return 0;
+					}
+					return ($a['Transaction']['dateTime'] > $b['Transaction']['dateTime']) ? -1 : 1;
+				}
+
+				uasort($amount, 'cmp');
+				//////////////////////////////
+				
+				$wallet['name'] = $this->WalletData->getWalletName($wallet_id);
+				$wallet['id'] = $wallet_id;
+				$this->set('wallet', $wallet);
+				
+				$this->set('transaction', $amount);
 			}
 		
 		}

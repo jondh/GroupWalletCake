@@ -3,8 +3,7 @@
 <table>
 	<tr>
 		<th>Amount</th>
-		<th>Owe</th>
-		<th>Person Owed</th>
+		<th>Person</th>
 		<th>Comments</th>
 		<th>Date (Mountain Time)</th>
 	</tr>
@@ -18,8 +17,7 @@
 				 		echo $Transactions['Transaction']['amount'];
 				 	} ?>
 				</td>
-				<td> <?php echo $Transactions['oweUID']['username']; ?> </td>
-				<td> <?php echo $Transactions['owedUID']['username']; ?> </td>
+				<td> <?php echo $Transactions['User']['username']; ?> </td>
 				<td> <?php echo $Transactions['Transaction']['comments']; ?> </td>
 				<td> <?php 
 						echo $this->Time->format($Transactions['Transaction']['dateTime'], '%B %e, %Y %l:%M %p');

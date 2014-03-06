@@ -4,10 +4,10 @@
 	
 		public function beforeFilter(){
 			parent::beforeFilter();
-       		$this->Auth->allow('login','add');
+       		$this->Auth->allow('login','add','loginMobile','loginMobileStatus', 'logoutMobile', 'getUser');
 		}
 		
-		public $components = array('UploadPic');
+		public $components = array('UploadPic', 'AccessToken');
 	
 		public function index(){
 		
@@ -20,8 +20,223 @@
            		if ($this->Auth->login()) {
         			return $this->redirect($this->Auth->redirect());
           	  	}
-          	  	$this->Session->setFlash(__('Invalid username or password, try again'));
+          	  	
+          	  	$ifNoSalt = $this->User->find('first', array(
+          	  		'conditions' => array(
+          	  			'User.username' => $this->request->data['User']['username']
+          	  		)
+          	  	));
+          	  	
+          	  	if($ifNoSalt){
+          	  		
+          	  		if($ifNoSalt['User']['salt'] == null){
+          	  			$this->redirect("http://whereone.com/GroupWalletAlpha/users/loginOldPass");
+          	  		}
+          	  		$this->Session->setFlash(__($ifNoSalt['User']['salt']));
+          	  	}
+          	  	else{
+          	  		$this->Session->setFlash(__($this->request->data['User']['username']));
+          	  	}
        		}
+		}
+		
+		public function loginMobile(){
+			$this->layout = 'ajax';
+			if ($this->request->is('post')) {
+				$this->request->data['User']['username'] = $this->request->data['username'];
+				$this->request->data['User']['password'] = $this->request->data['password'];
+				if ($this->Auth->login()) {
+					$user['User'] = $this->Auth->user();
+					$user['Token']['Private'] = Security::generateAuthKey();
+					$user['Token']['Public'] = Security::generateAuthKey();
+					$this->User->id = $this->Auth->user('id');
+					$this->User->set($this->request->data);
+					if ($this->User->saveField('public_access_token', $user['Token']['Public'])) {
+						if ($this->User->saveField('private_access_token', $user['Token']['Private'])) {
+							$user['result'] = 'success';
+							return new CakeResponse(array('body' => json_encode($user)));
+						}
+					}
+          	  	}
+			/*
+        		
+        		// Log in user with current password hashing
+        		$user = $this->User->find('first', array(
+        			'conditions' => array(
+        				'User.username' => $this->request->data['username']
+        			)
+        		));
+        		
+        		if($user){		
+        			if($user['User']['id'] > 0){
+						if($user['User']['password'] == Security::hash(Security::hash(Security::hash($this->request->data['password'].$user['User']['salt'])))){
+							if($this->Auth->login($user['User'])){
+								unset($user['User']['password']);
+								unset($user['User']['salt']);
+								$this->Auth->user = $user['User'];
+								return new CakeResponse(array('body' => json_encode($user)));
+							}
+						}
+					}
+				}
+			*/
+			/*
+			* The passwords stored here are hashed another way 
+				$this->request->data['password'] = AuthComponent::password($this->request->data['password']);
+				return new CakeResponse(array('body' => $this->request->data['password']));
+				
+				$user = $this->User->find('first', array(
+					'conditions' => array(
+						'User.username' => $this->request->data['username'],
+						'User.password' => $this->request->data['password']
+					)
+				));
+				
+				if($user){		
+					if ($user['User']['id'] > 0 && $this->Auth->login($user['User'])) {
+						unset($user['User']['password']);
+						unset($user['User']['salt']);
+						$this->Auth->user = $user['User'];
+						return new CakeResponse(array('body' => json_encode($user)));
+					}
+				}
+				
+				$user = $this->User->find('first', array(
+					'conditions' => array(
+						'User.email' => $this->request->data['username'],
+						'User.password' => $this->request->data['password']
+					)
+				));
+				if($user){
+					if ($user['User']['id'] > 0 && $this->Auth->login($user['User'])) {
+						unset($user['User']['password']);
+						unset($user['User']['salt']);
+						$this->Auth->user = $user['User'];
+						return new CakeResponse(array('body' => json_encode($user)));
+					}
+				}
+				*/
+				$result['result'] = 'not logged in';
+				return new CakeResponse(array('body' => json_encode($result)));
+				
+       		}
+       		$result['result'] = 'not post';
+       		return new CakeResponse(array('body' => json_encode($result)));
+       		
+		}
+		
+		public function logoutMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$this->User->id = $this->request->data['user_id'];
+					
+					if(!$this->User->exists()){
+						return new CakeResponse(array('body' => 'failure'));
+					}
+					
+					$this->User->set($this->request->data);
+					if ($this->User->saveField('public_access_token', "")) {
+						if ($this->User->saveField('private_access_token', "")) {
+							return new CakeResponse(array('body' => 'success'));
+						}
+					}
+				}
+				else if($tokenSuccess == "public"){
+					$this->User->id = $this->request->data['user_id'];
+					
+					if(!$this->User->exists()){
+						return new CakeResponse(array('body' => 'failure'));
+					}
+					
+					$this->User->set($this->request->data);
+					if ($this->User->saveField('public_access_token', "")) {
+						if ($this->User->saveField('private_access_token', "")) {
+							return new CakeResponse(array('body' => 'bad token'));
+						}
+					}
+				}
+				else if($tokenSuccess == "private"){
+					$this->User->id = $this->request->data['user_id'];
+					
+					if(!$this->User->exists()){
+						return new CakeResponse(array('body' => 'failure'));
+					}
+					
+					$this->User->set($this->request->data);
+					if ($this->User->saveField('public_access_token', "")) {
+						if ($this->User->saveField('private_access_token', "")) {
+							return new CakeResponse(array('body' => 'bad token'));
+						}
+					}
+				}
+				else if($tokenSuccess == "bad data"){
+					$this->User->id = $this->request->data['user_id'];
+					
+					if(!$this->User->exists()){
+						return new CakeResponse(array('body' => 'failure'));
+					}
+					
+					$this->User->set($this->request->data);
+					if ($this->User->saveField('public_access_token', "")) {
+						if ($this->User->saveField('private_access_token', "")) {
+							return new CakeResponse(array('body' => 'bad token'));
+						}
+					}
+				}
+				else{
+					$this->User->id = $this->request->data['user_id'];
+					
+					if(!$this->User->exists()){
+						return new CakeResponse(array('body' => 'failure'));
+					}
+					
+					$this->User->set($this->request->data);
+					if ($this->User->saveField('public_access_token', "")) {
+						if ($this->User->saveField('private_access_token', "")) {
+							return new CakeResponse(array('body' => 'bad token'));
+						}
+					}
+				}
+			}
+			else return new CakeResponse(array('body' => 'failure'));
+		}
+		
+		public function loginMobileStatus(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$userMatch = $this->User->find('first', array(
+						'conditions' => array(
+							'User.public_access_token' => $this->request->data['public_token'],
+							'User.id' => $this->request->data['user_id']
+						)
+					));
+					
+					if($userMatch){
+						return new CakeResponse(array('body' => 'success'));
+					}
+					else{
+						return new CakeResponse(array('body' => 'failure'));
+					}
+				}
+				else if($tokenSuccess == "public"){
+					return new CakeResponse(array('body' => 'bad token'));
+				}
+				else if($tokenSuccess == "private"){
+					return new CakeResponse(array('body' => 'bad token'));
+				}
+				else if($tokenSuccess == "bad data"){
+					return new CakeResponse(array('body' => 'bad token'));
+				}
+				else{
+					return new CakeResponse(array('body' => 'bad token'));
+				}
+			}
 		}
 		
 		public function logout() {
@@ -32,6 +247,7 @@
 		public function add(){
 			if($this->request->is('post')){
 				$this->User->create();
+				$this->request->data['User']['salt'] = Security::generateAuthKey();
 				 if ($this->User->save($this->request->data)) {
                		 $this->Session->setFlash(__('The user has been saved'));
                	 	 if ($this->Auth->login()) {
@@ -39,6 +255,28 @@
           	  		 }
            		 }
            		 $this->Session->setFlash(__('The user could not be saved. Please, try again'));
+			}
+		}
+		
+		public function changeOldPass(){
+			if ($this->request->is('post')){
+				$this->User->id = $this->Auth->user('id');
+                
+                if(!$this->User->exists()){
+      				$this->Session->setFlash(__('Unable to find User.'));
+   				}
+                
+                $this->User->set($this->request->data);
+			
+				if($this->request->data['User']['password']){
+					$this->request->data['User']['salt'] = Security::generateAuthKey();
+					if ($this->User->save($this->request->data)) {
+						return $this->redirect($this->Auth->redirect());
+					}
+					else{
+					 	$this->Session->setFlash(__('Something went wrong..'));
+					 }
+                }
 			}
 		}
 		
@@ -265,6 +503,56 @@
 			else{
 				echo "no.";
 			}
+		}
+		
+		public function getUser(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$user = $this->User->find('first', array(
+						'conditions' => array(
+							'User.id' => $this->request->data['user_id']
+						)
+					));
+					unset($user['User']['password']);
+					unset($user['User']['salt']);
+					unset($user['User']['public_access_token']);
+					unset($user['User']['private_access_token']);
+					$user['result'] = 'success';
+					return new CakeResponse(array('body' => json_encode($user)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}	
+		
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}
+		}
+		
+		public function sendFile() {
+			
+			$this->response->file('webroot/GroupWalletCake.apk');
+			// Return response object to prevent controller from trying to render
+			// a view
+			return $this->response;
 		}
 	}
 ?>

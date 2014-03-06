@@ -120,6 +120,24 @@ class GetComponent extends Component {
       	  	return $totalAmount;
 		}
     }
+    
+    public function getWalletTotal($wallet_id = -1) {
+        if($wallet_id > -1){
+    		$TransactionModel = ClassRegistry::init('Transaction');
+    	
+			$amount = $TransactionModel->find('all', array(
+				'conditions' => array(
+					'wallet_id' => $wallet_id,
+				)
+			));
+		
+			$totalAmount = 0; 
+			for($i = 0; $i < count($amount); $i++){
+				$totalAmount += $amount[$i]['Transaction']['amount'];
+			}
+      	  	return $totalAmount;
+		}
+    }
 	
     public function getOwe($user_id = 0) {
         if($user_id > 0){

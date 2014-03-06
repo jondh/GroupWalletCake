@@ -21,6 +21,7 @@
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 App::uses('Controller', 'Controller');
+App::uses('Security', 'Utility');
 
 /**
  * Application Controller
@@ -36,6 +37,7 @@ class AppController extends Controller {
         'Session',
         /* add Auth component and set  the urls that will be loaded after the login and logout actions is performed */
         'Auth' => array(
+        	'authenticate' => array('SaltForm'),
             'loginRedirect' => array('controller' => 'wallets', 'action' => 'index'),
             'logoutRedirect' => array('controller' => 'users', 'action' => 'login')
         )
@@ -43,7 +45,9 @@ class AppController extends Controller {
 
     public function beforeFilter() {
         /* set actions that will not require login */
-        $this->Auth->authenticate = array('Custom');
-        $this->Auth->allow('login', 'add');
+        //$this->Auth->authenticate = array('Custom');
+        parent::beforeFilter();
+        Security::setHash('sha512');
+        $this->Auth->allow('login', 'add', 'loginMobile');
     }
 }

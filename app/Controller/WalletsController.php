@@ -80,6 +80,8 @@
 						$wallets[$i]['money']['owed'] = $this->Get->getOwedWallet(
 							$this->Auth->user('id'), $wallets[$i]['Wallet']['id']);
 						$wallets[$i]['money']['total'] = $wallets[$i]['money']['owed'] - $wallets[$i]['money']['owe'];
+						$wallets[$i]['money']['totalEverything'] = $this->Get->getWalletTotal($wallets[$i]['Wallet']['id']);
+						
 				
 						$uniqueWallets[$j] = $wallets[$i];
 						$j++;

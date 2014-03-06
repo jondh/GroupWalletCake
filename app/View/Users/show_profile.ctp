@@ -31,3 +31,6 @@ else
 }
 ?>
 
+<a href="http://whereone.com/GroupWalletCake/GroupWallet.apk"> Download Android App </a>
+
+

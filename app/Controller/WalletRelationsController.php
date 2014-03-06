@@ -1,7 +1,12 @@
 <?php
 	class WalletRelationsController extends AppController { 
 		
-		public $components = array('Get');
+		public function beforeFilter(){
+			parent::beforeFilter();
+       		$this->Auth->allow('getWallets', 'getWalletRelations');
+		}
+		
+		public $components = array('Get', 'AccessToken');
 		
 		public function index($wallet_id){
 		
@@ -58,6 +63,105 @@
 			$this->set('wallet_id', $wallet_id);
 			$this->set('wallet_relations', $othersInWallet);
 		}	
+		
+		public function getWallets(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$user_id = $this->request->data['user_id'];
+		
+					$wallets = $this->WalletRelation->find('all', array(
+						'joins' => array(
+							array(
+								'table' => 'wallets',
+								'alias' => 'Wallet',
+								'type' => 'INNER',
+								'conditions' => array(
+									'Wallet.id = WalletRelation.wallet_id'
+								)
+							),
+						),
+						'conditions' => array(
+							'WalletRelation.user_id' => $user_id,
+							'WalletRelation.accept' => '1'
+						),
+						'fields' => array(
+							'Wallet.*'
+						)
+					));
+					$result['result'] = 'success';
+					$result['wallets'] = $wallets;
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}
+		}
+		
+		public function getWalletRelations(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$walletRelations = $this->WalletRelation->find('all', array(
+						'conditions' => array(
+							'NOT' => array(
+								'WalletRelation.user_id' => $this->request->data['user_id'],
+							),
+							'WalletRelation.wallet_id' => $this->request->data['wallet_id'],
+							'WalletRelation.accept' => '1'
+						),
+						'fields' => array(
+							'WalletRelation.*'
+						)
+					));
+					$result['result'] = 'success';
+					$result['walletRelations'] = $walletRelations;
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
 	
 		public function addUser($wallet_id, $user_id){
 			if($user_id && $wallet_id){

@@ -4,12 +4,20 @@ class User extends AppModel {
     /* Validation taken from tutorial http://miftyisbored.com/a-complete-login-and-authentication-application-tutorial-for-cakephp-2-3/ */
     public $validate = array(
         'username' => array(
+			'required' => array(
+				'on'         => 'create',
+				'rule'       => 'notEmpty',
+				'message'    => 'Enter your username',
+				'required'   => true,
+				'last'       => true
+			),
             'nonEmpty' => array(
                 'rule' => array('notEmpty'),
                 'message' => 'A username is required',
                 'allowEmpty' => false
             ),
             'between' => array( 
+            	'on' => 'create',
                 'rule' => array('between', 5, 15), 
                 'required' => true, 
                 'message' => 'Usernames must be between 5 to 15 characters'
@@ -24,12 +32,20 @@ class User extends AppModel {
             ),
         ),
         'firstName' => array(
+        	'required' => array(
+				'on'         => 'create',
+				'rule'       => 'notEmpty',
+				'message'    => 'Enter your first name',
+				'required'   => true,
+				'last'       => true
+			),
             'nonEmpty' => array(
                 'rule' => array('notEmpty'),
                 'message' => 'A first name is required',
                 'allowEmpty' => false
             ),
             'between' => array( 
+            	'on' => 'create',
                 'rule' => array('between', 1, 15), 
                 'required' => true, 
                 'message' => 'Names must be between 1 to 15 characters'
@@ -40,12 +56,20 @@ class User extends AppModel {
             ),
         ),
         'lastName' => array(
+        	'required' => array(
+				'on'         => 'create',
+				'rule'       => 'notEmpty',
+				'message'    => 'Enter your last name',
+				'required'   => true,
+				'last'       => true
+			),
             'nonEmpty' => array(
                 'rule' => array('notEmpty'),
                 'message' => 'A last name is required',
                 'allowEmpty' => false
             ),
             'between' => array( 
+            	'on' => 'create',
                 'rule' => array('between', 1, 15), 
                 'required' => true, 
                 'message' => 'Names must be between 1 to 15 characters'
@@ -56,10 +80,11 @@ class User extends AppModel {
             ),
         ),
         'password' => array(
-            'required' => array(
-                'rule' => array('notEmpty'),
+        	'required' => array(
+				'on'   => 'create',
+				'rule' => array('notEmpty'),
                 'message' => 'A password is required'
-            ),
+			),
             'min_length' => array(
                 'rule' => array('minLength', '6'),  
                 'message' => 'Password must have a mimimum of 6 characters'
@@ -68,6 +93,7 @@ class User extends AppModel {
          
         'passwordConfirm' => array(
             'required' => array(
+            	'on'   => 'create',
                 'rule' => array('notEmpty'),
                 'message' => 'Please confirm your password'
             ),
@@ -79,6 +105,7 @@ class User extends AppModel {
          
         'email' => array(
             'required' => array(
+            	'on'   => 'create',
                 'rule' => array('email', true),    
                 'message' => 'Please provide a valid email address.'   
             ),
@@ -282,6 +309,7 @@ class User extends AppModel {
      * @return boolean
      */
      public function beforeSave($options = array()) {
+     /*
         // hash our password
         if (isset($this->data[$this->alias]['password'])) {
             $this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
@@ -294,14 +322,22 @@ class User extends AppModel {
      
         // fallback to our parent
         return parent::beforeSave($options);
+    */
+    
+    	if (isset($this->data[$this->alias]['password']) && isset($this->data[$this->alias]['salt'])) {
+        	$this->data[$this->alias]['password'] = 
+            	Security::hash(Security::hash(Security::hash($this->data[$this->alias]['password'].
+        			$this->data[$this->alias]['salt'])));
+   		}
+   		return true;
+   	
+   	/*
+   		if(isset($this->data[$this->alias]['password'])) {
+			$this->data[$this->alias]['password'] = Security::hash($this->data[$this->alias]['password'], 'blowfish');
+			unset($this->data['User']['passwd']);
+		}
+
+		return true;
+		*/
     }
-    /*
-    public function beforeSave($options = array()) {
-   		 // password hashing   
-   		 if (isset($this->data[$this->alias]['password'])) {
-    	    $this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
-   		 }
-    	return true;
-	}
-	*/
 }
