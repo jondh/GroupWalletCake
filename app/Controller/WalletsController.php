@@ -1,7 +1,12 @@
 <?php
 	class WalletsController extends AppController { 
 	
-		public $components = array('Get');
+		public function beforeFilter(){
+			parent::beforeFilter();
+       		$this->Auth->allow('addMobile');
+		}
+	
+		public $components = array('Get', 'AccessToken', 'Insert');
 	
 		public function index(){
 			//$this->layout = 'wallets';
@@ -101,6 +106,81 @@
 					return $this->redirect(array('controller' => 'WalletRelations', 'action' => 'addUser', $this->Wallet->id, $this->Auth->user('id')));
 				}
 				$this->Session->setFlash(__('Unable tho add your wallet'));
+			}
+		}
+		
+		public function addMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					
+					$walletData['Wallet']['user_id'] = $this->request->data['userID'];
+					$walletData['Wallet']['name'] = $this->request->data['name'];
+					$walletData['Wallet']['date'] = NULL;
+					$walletData['Wallet']['active'] = '1';
+					
+					$db = ConnectionManager::getDataSource('default');
+					if (!$db->isConnected()) {
+						$result['result'] = 'failureDBConn';
+						return new CakeResponse(array('body' => json_encode($result)));
+					} else {
+						$db->rawQuery(" BEGIN; 
+										INSERT INTO wallets (name, user_id) VALUES ('".$this->request->data['name']."',".$this->request->data['userID']."); 
+										INSERT INTO wallet_relations (wallet_id, user_id) VALUES ( (SELECT id FROM wallets WHERE name = '".$this->request->data['name']."' AND user_id = ".$this->request->data['userID']." ) ,".$this->request->data['userID']."); 
+										COMMIT;");
+						
+						$wallet = $this->Wallet->find('first', array(
+							'joins' => array(
+								array(
+									'table' => 'wallet_relations',
+									'alias' => 'WalletR',
+									'type' => 'INNER',
+									'conditions' => array(
+										'Wallet.id = WalletR.wallet_id'
+									)
+								),
+							),
+							'conditions' => array(
+								'Wallet.name' => $this->request->data['name'],
+								'Wallet.user_id' => $this->request->data['userID']
+							),
+							'fields' => array(
+								'Wallet.*', 'WalletR.*'
+							)
+						));
+						if($wallet){
+							$result['result'] = 'success';
+							$result['wallet'] = $wallet['Wallet'];
+							$result['relation'] = $wallet['WalletR'];
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						$result['result'] = 'failure in insert';
+						return new CakeResponse(array('body' => json_encode($result)));
+					}
+					
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
 			}
 		}
 		

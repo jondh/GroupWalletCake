@@ -3,7 +3,7 @@
 		
 		public function beforeFilter(){
 			parent::beforeFilter();
-       		$this->Auth->allow('addRemote');
+       		$this->Auth->allow('addRemote', 'getTransactions');
 		}
 		
 		public $components = array('Validate', 'UserData', 'WalletData', 'AccessToken');
@@ -76,13 +76,111 @@
 					$trasData['Transaction']['comments'] = $this->request->data['comments'];
 					$trasData['Transaction']['dateTime'] = NULL;
 					if ($this->Transaction->save($trasData)) {
-						$result['result'] = 'success';
-						return new CakeResponse(array('body' => json_encode($result)));
+					
+						$trans = $this->Transaction->find('first', array(
+							'conditions' => array(
+								'transaction_id' => $this->Transaction->id
+							)
+						));
+						
+						if($trans){
+							$result['result'] = 'success';
+							$result['Transaction'] = $trans['Transaction'];
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else{
+							$result['result'] = 'failure in find';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
 					}
 					else{
 						$result['result'] = 'failure';
+						$result['test'] = $trasData;
 						return new CakeResponse(array('body' => json_encode($result)));
 					}
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}
+		}
+		
+		public function getTransactions(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+					
+				if($tokenSuccess == "they good"){
+					$wallet_ids = $this->request->data['wallets'];
+					
+					$records;
+					$first = true;
+					for($i = 0; $i < count($wallet_ids); $i++){
+						if( $wallet_ids[$i] == 0 ){
+							$tempRecords = $this->Transaction->find('all', array(
+								'conditions' => array(
+									'NOT' => array(
+										'transaction_id' => (array) $this->request->data['currentRecords']
+									),
+									'wallet_id' => $wallet_ids[$i],
+									'OR' => array(
+										'oweUID' => $this->request->data['userID'],
+										'owedUID' => $this->request->data['userID']
+									)
+								)
+							));
+						}
+						else{
+							$tempRecords = $this->Transaction->find('all', array(
+								'conditions' => array(
+									'NOT' => array(
+										'transaction_id' => (array) $this->request->data['currentRecords']
+									),
+									'wallet_id' => $wallet_ids[$i]
+								)
+							));
+						}
+						
+						if($tempRecords){
+							if($first){
+								$first = false;
+								$recordsSize = 0;
+							}
+							else{
+								$recordsSize = count($records);
+							}
+							for($j = 0; $j < count($tempRecords); $j++){
+								$records[$recordsSize + $j] = $tempRecords[$j];
+							}
+						}
+					}
+					
+					$result['result'] = 'success';
+					if(!$first){
+						$result['records'] = $records;
+						$result['empty'] = false;
+					}
+					else{
+						$result['empty'] = true;
+					}
+					return new CakeResponse(array('body' => json_encode($result)));
 				}
 				else if($tokenSuccess == "public"){
 					$result['result'] = 'bad token';

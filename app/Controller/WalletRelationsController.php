@@ -3,7 +3,7 @@
 		
 		public function beforeFilter(){
 			parent::beforeFilter();
-       		$this->Auth->allow('getWallets', 'getWalletRelations');
+       		$this->Auth->allow('getWallets', 'getWalletRelations', 'addMobile', 'getPendingWalletRelations', 'acceptDeclineMobile');
 		}
 		
 		public $components = array('Get', 'AccessToken');
@@ -84,15 +84,25 @@
 							),
 						),
 						'conditions' => array(
+							'NOT' => array(
+								'Wallet.id' => $this->request->data['currentWallets']
+							),
 							'WalletRelation.user_id' => $user_id,
-							'WalletRelation.accept' => '1'
+							'WalletRelation.accept' => $this->request->data['accept']
 						),
 						'fields' => array(
-							'Wallet.*'
+							'Wallet.*', 'WalletRelation.*'
 						)
 					));
+					
 					$result['result'] = 'success';
-					$result['wallets'] = $wallets;
+					if($wallets){
+						$result['wallets'] = $wallets;
+						$result['empty'] = false;
+					}
+					else{
+						$result['empty'] = true;
+					}
 					return new CakeResponse(array('body' => json_encode($result)));
 				}
 				else if($tokenSuccess == "public"){
@@ -127,18 +137,191 @@
 					$walletRelations = $this->WalletRelation->find('all', array(
 						'conditions' => array(
 							'NOT' => array(
-								'WalletRelation.user_id' => $this->request->data['user_id'],
+								'WalletRelation.id' => $this->request->data['currentRelations']
 							),
 							'WalletRelation.wallet_id' => $this->request->data['wallet_id'],
-							'WalletRelation.accept' => '1'
 						),
 						'fields' => array(
 							'WalletRelation.*'
 						)
 					));
 					$result['result'] = 'success';
-					$result['walletRelations'] = $walletRelations;
+					
+					if($walletRelations){
+						$result['walletRelations'] = $walletRelations;
+						$result['empty'] = false;
+					}
+					else{
+						$result['empty'] = true;
+					}
 					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
+		
+		public function getPendingWalletRelations(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$walletRelations = $this->WalletRelation->find('all', array(
+						'conditions' => array(
+							'NOT' => array(
+								'WalletRelation.id' => $this->request->data['currentRelations']
+							),
+							'WalletRelation.wallet_id' => $this->request->data['wallet_id'],
+							'WalletRelation.accept' => '0'
+						),
+						'fields' => array(
+							'WalletRelation.*'
+						)
+					));
+					$result['result'] = 'success';
+					
+					if($walletRelations){
+						$result['walletRelations'] = $walletRelations;
+						$result['empty'] = false;
+					}
+					else{
+						$result['empty'] = true;
+					}
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
+		
+		public function addMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$this->WalletRelation->create();
+					$this->request->data['WalletRelation']['wallet_id'] = $this->request->data['walletID'];
+					$this->request->data['WalletRelation']['user_id'] = $this->request->data['userID'];
+					$this->request->data['WalletRelation']['accept'] = $this->request->data['accept'];
+					$this->request->data['WalletRelation']['active_user'] = '1';
+					if ($this->WalletRelation->save($this->request->data, false)) {
+						$walletRelation = $this->WalletRelation->find('first', array(
+							'conditions' => array(
+								'id' => $this->WalletRelation->id
+							)
+						));
+						
+						if($walletRelation){
+							$result['result'] = 'success';
+							$result['walletRelation'] = $walletRelation['WalletRelation'];
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else{
+							$result['result'] = 'failure in find';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+					}
+					else{
+						$result['result'] = 'failure in save';
+						$result['blaze'] = $this->request->data;
+						return new CakeResponse(array('body' => json_encode($result)));
+					}
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
+		
+		public function acceptDeclineMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$curWR = $this->WalletRelation->find('first', array(
+						'conditions' => array(
+							'wallet_id' => $this->request->data['walletID'],
+							'user_id' => $this->request->data['userID']
+						)	
+					));
+					$this->WalletRelation->set( $curWR );
+					
+					if( $this->request->data['accept'] == 1 ){
+						if ($this->WalletRelation->saveField('accept', 1)) {
+							$result['result'] = 'success';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else { 
+							$result['result'] = 'failure saving';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+					}
+					else if( $this->request->data['accept'] == 0 ){
+						if ($this->WalletRelation->delete($curWR['WalletRelation'])) {
+							$result['result'] = 'success';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else{
+							$result['result'] = 'failure deleting';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+					}
 				}
 				else if($tokenSuccess == "public"){
 					$result['result'] = 'bad token';

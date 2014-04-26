@@ -1,7 +1,12 @@
 <?php
 	class FriendsController extends AppController { 
 	
-		public $components = array('Get');
+		public function beforeFilter(){
+			parent::beforeFilter();
+       		$this->Auth->allow('getFriendsMobile', 'addMobile', 'acceptDeclineMobile');
+		}
+		
+		public $components = array('Get', 'AccessToken');
 		
 		/*
 		 *	Find all friends of the logged in user
@@ -170,6 +175,182 @@
 			$this->Session->setFlash(__('No id provided'));
 			return $this->redirect(array('controller' => 'Users', 'action' => 'showProfile'));
 		} 
+		
+		public function getFriendsMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$friends = $this->Friend->find('all', array(
+						'conditions' => array(
+							'NOT' => array(
+								'Friend.id' => $this->request->data['currentFriends']
+							),
+							'OR' => array(
+								'Friend.user_id_1' => $this->request->data['user_id'],
+								'Friend.user_id_2' => $this->request->data['user_id']
+							)
+						),
+						'fields' => array(
+							'Friend.*'
+						)
+					));
+					$result['result'] = 'success';
+					
+					if($friends){
+						$result['friends'] = $friends;
+						$result['empty'] = false;
+					}
+					else{
+						$result['empty'] = true;
+					}
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
+		
+		public function addMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$this->Friend->create();
+					$this->request->data['Friend']['user_id_1'] = $this->request->data['user1'];
+					$this->request->data['Friend']['user_id_2'] = $this->request->data['user2'];
+					$this->request->data['Friend']['accept'] = $this->request->data['accept'];
+					$this->request->data['Friend']['active_user'] = '1';
+					if ($this->Friend->save($this->request->data, false)) {
+						$friend = $this->Friend->find('first', array(
+							'conditions' => array(
+								'id' => $this->Friend->id
+							)
+						));
+						
+						if($friend){
+							$result['result'] = 'success';
+							$result['friend'] = $friend['Friend'];
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else{
+							$result['result'] = 'failure in find';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+					}
+					else{
+						$result['result'] = 'failure in save';
+						return new CakeResponse(array('body' => json_encode($result)));
+					}
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
+		
+		public function acceptDeclineMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$curWR = $this->Friend->find('first', array(
+						'conditions' => array(
+							'user_id_1' => $this->request->data['user1'],
+							'user_id_2' => $this->request->data['user2']
+						)	
+					));
+					if(!$curWR){
+						$curWR = $this->Friend->find('first', array(
+							'conditions' => array(
+								'user_id_1' => $this->request->data['user2'],
+								'user_id_2' => $this->request->data['user1']
+							)	
+						));
+					}
+					$this->Friend->set( $curWR );
+					
+					if( $this->request->data['accept'] == 1 ){
+						if ($this->Friend->saveField('accept', 1)) {
+							$result['result'] = 'success';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else { 
+							$result['result'] = 'failure saving';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+					}
+					else if( $this->request->data['accept'] == 0 ){
+						if ($this->Friend->delete($curWR['Friend'])) {
+							$result['result'] = 'success';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+						else{
+							$result['result'] = 'failure deleting';
+							return new CakeResponse(array('body' => json_encode($result)));
+						}
+					}
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}	
+		}
 		
 	}
 ?>

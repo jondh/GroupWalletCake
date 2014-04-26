@@ -22,6 +22,7 @@
  */
 App::uses('Controller', 'Controller');
 App::uses('Security', 'Utility');
+App::uses('ConnectionManager', 'Model'); 
 
 /**
  * Application Controller
@@ -46,7 +47,19 @@ class AppController extends Controller {
     public function beforeFilter() {
         /* set actions that will not require login */
         //$this->Auth->authenticate = array('Custom');
+        
         parent::beforeFilter();
+        
+        App::import('Vendor', 'Facebook', array(
+			'file' => 'facebook-php-sdk-master' . DS . 'src' . DS . 'facebook.php'
+		));
+
+		$this->Facebook = new Facebook(array(
+			'appId'     =>  '315826831884119',
+			'secret'    =>  '3544fcde9e698c45a35abd597a3409e1'
+
+		));
+        
         Security::setHash('sha512');
         $this->Auth->allow('login', 'add', 'loginMobile');
     }

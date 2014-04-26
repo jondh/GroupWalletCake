@@ -4,7 +4,7 @@
 	
 		public function beforeFilter(){
 			parent::beforeFilter();
-       		$this->Auth->allow('login','add','loginMobile','loginMobileStatus', 'logoutMobile', 'getUser');
+       		$this->Auth->allow('login','add','loginMobile','loginMobileStatus', 'logoutMobile', 'getUser', 'addMobile', 'facebookMobile', 'getPaginateUsers', 'getUsersMobile');
 		}
 		
 		public $components = array('UploadPic', 'AccessToken');
@@ -256,6 +256,153 @@
            		 }
            		 $this->Session->setFlash(__('The user could not be saved. Please, try again'));
 			}
+		}
+		
+		public function addMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$this->User->create();
+				$this->request->data['User']['username'] = $this->request->data['username'];
+				$this->request->data['User']['password'] = $this->request->data['password'];
+				$this->request->data['User']['email'] = $this->request->data['email'];
+				$this->request->data['User']['firstName'] = $this->request->data['firstName'];
+				$this->request->data['User']['lastName'] = $this->request->data['lastName'];
+				$this->request->data['User']['salt'] = Security::generateAuthKey();
+				if ($this->User->save($this->request->data)) {
+					if ($this->Auth->login()) {
+						$user['User'] = $this->Auth->user();
+						$user['Token']['Private'] = Security::generateAuthKey();
+						$user['Token']['Public'] = Security::generateAuthKey();
+						$this->User->id = $this->Auth->user('id');
+						$this->User->set($this->request->data);
+						if ($this->User->saveField('public_access_token', $user['Token']['Public'])) {
+							if ($this->User->saveField('private_access_token', $user['Token']['Private'])) {
+								$user['result'] = 'success';
+								return new CakeResponse(array('body' => json_encode($user)));
+							}
+						}
+					}
+				}
+				$user['result'] = 'failure';
+				$user['errors'] = $this->User->validationErrors;
+           		return new CakeResponse(array('body' => json_encode($user)));
+			}
+		}
+		
+		public function facebookMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post') ){
+			
+				$this->Facebook->setAccessToken( $this->request->data['token'] );
+				if( $this->request->data['fbID'] == $this->Facebook->getUser() ){
+				
+					// We have a user ID, so probably a logged in user.
+					// If not, we'll get an exception, which we handle below.
+					try {
+					
+						$user_profile = $this->Facebook->api('/me','GET');
+						
+						$user = $this->User->find('first', array(
+							'conditions' => array(
+								'fbID' => $this->request->data['fbID']
+							)
+						));
+						
+						if($user){
+							unset($user['User']['password']);
+							unset($user['User']['salt']);
+							unset($user['User']['public_access_token']);
+							unset($user['User']['private_access_token']);
+							$this->User->set($user);
+							if($user['User']['firstName'] != $user_profile['first_name']){
+								$this->User->saveField('firstName', $user_profile['first_name']);
+							}
+							if($user['User']['lastName'] != $user_profile['last_name']){
+								$this->User->saveField('lastName', $user_profile['last_name']);
+							}
+							if($user['User']['email'] != $user_profile['email']){
+								$this->User->saveField('email', $user_profile['email']);
+							}
+							$user['Token']['Private'] = Security::generateAuthKey();
+							$user['Token']['Public'] = Security::generateAuthKey();
+							
+							if ($this->User->saveField('public_access_token', $user['Token']['Public'])) {
+								if ($this->User->saveField('private_access_token', $user['Token']['Private'])) {
+									$user['result'] = 'success';
+									return new CakeResponse(array('body' => json_encode($user)));
+								}
+							}
+							$user['result'] = 'failure';
+							return new CakeResponse(array('body' => json_encode($user)));
+						}
+						else if($this->request->data['new'] == 'true'){
+							$this->User->create();
+							if( array_key_exists('username', $user_profile) ){
+								$this->request->data['User']['username'] = $user_profile['username'];
+							}
+							else{
+								$this->request->data['User']['username'] = substr($user_profile['first_name'], 0, 1) . $user_profile['last_name'];
+							}
+							$this->request->data['User']['password'] = "000000";
+							$this->request->data['User']['email'] = $user_profile['email'];
+							$this->request->data['User']['firstName'] = $user_profile['first_name'];
+							$this->request->data['User']['lastName'] = $user_profile['last_name'];
+							$this->request->data['User']['fbID'] = $this->request->data['fbID'];
+							$this->request->data['User']['salt'] = Security::generateAuthKey();
+							if ($this->User->saveAll($this->request->data)) {
+								$user['User'] = $this->request->data['User'];
+								$user['Token']['Private'] = Security::generateAuthKey();
+								$user['Token']['Public'] = Security::generateAuthKey();
+								$userID = $this->User->find('first', array(
+									'conditions' => array(
+										'fbID' => $this->request->data['fbID']
+									),
+									'fields' => array(
+										'id'
+									)
+								));
+								$user['User']['id'] = $userID['User']['id'];
+								$this->User->set($this->request->data);
+								if ($this->User->saveField('public_access_token', $user['Token']['Public'])) {
+									if ($this->User->saveField('private_access_token', $user['Token']['Private'])) {
+										if( $this->User->saveField('password', '111111') ){
+											$user['result'] = 'success';
+											return new CakeResponse(array('body' => json_encode($user)));
+										}
+									}
+								}
+							}
+							$user['result'] = 'failure';
+							$user['errors'] = $this->User->validationErrors;
+							return new CakeResponse(array('body' => json_encode($user)));
+						}
+						
+						$user['result'] = 'none';
+						
+						return new CakeResponse(array('body' => json_encode( $user )));
+
+					} catch(FacebookApiException $e) {
+						// If the user is logged out, you can have a 
+						// user ID even though the access token is invalid.
+						// In this case, we'll get an exception, so we'll
+						// just ask the user to login again here.
+						
+						$user['result'] = 'faliureToken';
+						
+						error_log($e->getType());
+						error_log($e->getMessage());
+						   
+					} 
+					
+				}
+				else{ 
+					$user['result'] = 'failureToken';
+					return new CakeResponse(array('body' => json_encode( $user ))); 
+				}
+	            
+			}
+			$user['result'] = 'failure';
+			return new CakeResponse(array('body' => json_encode( $user ))); 
 		}
 		
 		public function changeOldPass(){
@@ -516,12 +663,71 @@
 							'User.id' => $this->request->data['user_id']
 						)
 					));
-					unset($user['User']['password']);
-					unset($user['User']['salt']);
-					unset($user['User']['public_access_token']);
-					unset($user['User']['private_access_token']);
-					$user['result'] = 'success';
-					return new CakeResponse(array('body' => json_encode($user)));
+					if($user){
+						unset($user['User']['password']);
+						unset($user['User']['salt']);
+						unset($user['User']['public_access_token']);
+						unset($user['User']['private_access_token']);
+						$result['empty'] = false;
+						$result['user'] = $user['User'];
+					}
+					else{
+						$result['empty'] = true;
+					}
+					$result['result'] = 'success';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}	
+		
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}
+		}
+		
+		public function getUsersMobile(){
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$user = $this->User->find('all', array(
+						'conditions' => array(
+							'User.id' => (array) $this->request->data['userID']
+						)
+					));
+					
+					if($user){
+						$result['empty'] = false;
+						for($i = 0; $i < count($user); $i++){
+							unset($user[$i]['User']['password']);
+							unset($user[$i]['User']['salt']);
+							unset($user[$i]['User']['public_access_token']);
+							unset($user[$i]['User']['private_access_token']);
+						}
+						$result['users'] = $user;
+					}
+					else{
+						$result['empty'] = true;
+					}
+					$result['result'] = 'success';
+					return new CakeResponse(array('body' => json_encode($result)));
 				}
 				else if($tokenSuccess == "public"){
 					$result['result'] = 'bad token';
@@ -553,6 +759,83 @@
 			// Return response object to prevent controller from trying to render
 			// a view
 			return $this->response;
+		}
+		
+		public function pagination() {
+			// we prepare our query, the cakephp way!
+			$this->paginate = array(
+				'conditions' => array('User.id >' => '0'),
+				'limit' => 3,
+				'order' => array('id' => 'desc')
+			);
+	
+			// we are using the 'User' model
+			$users = $this->paginate('User');
+	
+			// pass the value to our view.ctp
+			$this->set('users', $users);
+		}
+		
+		public function getPaginateUsers() {
+			$this->layout = 'ajax';
+			if($this->request->is('post')){
+				$tokenSuccess = $this->AccessToken->checkAccessTokens($this->request->data['public_token'], $this->request->data['private_token'], $this->request->data['timeStamp']);
+				
+				if($tokenSuccess == "they good"){
+					$user = $this->User->find('all', array(
+						'conditions' => array(
+							'NOT' => array(
+								'id' => (array) $this->request->data['usersExclude']
+							),
+							'OR' => array(
+	            			'User.username LIKE'=>'%'.$this->request->data['match'].'%',
+	            			'User.firstName LIKE'=>'%'.$this->request->data['match'].'%',
+	            			'User.lastName LIKE'=>'%'.$this->request->data['match'].'%',
+	            			'User.email LIKE'=>'%'.$this->request->data['match'].'%'
+	            			)
+						),
+						'order' => 'username ASC',
+						'offset' => $this->request->data['start'],
+						'limit' => $this->request->data['length']
+					));
+					if($user){
+						$result['empty'] = false;
+						for($i = 0; $i < count($user); $i++){
+							unset($user[$i]['User']['password']);
+							unset($user[$i]['User']['salt']);
+							unset($user[$i]['User']['public_access_token']);
+							unset($user[$i]['User']['private_access_token']);
+						}
+						$result['users'] = $user;
+					}
+					else{
+						$result['empty'] = true;
+					}
+					$result['result'] = 'success';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "public"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "private"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else if($tokenSuccess == "bad data"){
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}
+				else{
+					$result['result'] = 'bad token';
+					return new CakeResponse(array('body' => json_encode($result)));
+				}	
+		
+			}
+			else{
+				$result['result'] = 'not post';
+				return new CakeResponse(array('body' => json_encode($result)));
+			}
 		}
 	}
 ?>
